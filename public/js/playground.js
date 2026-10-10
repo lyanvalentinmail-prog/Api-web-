@@ -122,11 +122,18 @@ document.addEventListener('DOMContentLoaded', () => {
       live.checked = isImage;
     }
     $('exec-modal').classList.add('open');
+    document.body.classList.add('modal-open');
     // Las imágenes se previsualizan al instante; el resto se ejecuta a mano.
     if (isImage) execute({ quiet: true });
   }
 
-  function closeModal() { $('exec-modal').classList.remove('open'); }
+  function closeModal() {
+    if (!$('exec-modal').classList.contains('open')) return;
+    $('exec-modal').classList.remove('open');
+    document.body.classList.remove('modal-open');
+    // Libera la imagen en pantalla y su blob.
+    resetPreview('');
+  }
   $('modal-close').addEventListener('click', closeModal);
   $('exec-modal').addEventListener('click', e => { if (e.target === $('exec-modal')) closeModal(); });
 
@@ -290,23 +297,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   async function copy(text) {
-    try { await navigator.clipboard.writeText(text); } catch { /* portapapeles no disponible */ }
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Contexto no seguro o permiso denegado: fallback clásico.
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch {
+        return false;
+      }
+    }
   }
-  function flash(btn, label = 'copiado') {
+  function flash(btn, label) {
     if (!btn) return;
-    const old = btn.textContent;
+    const old = btn.dataset.orig || (btn.dataset.orig = btn.textContent);
     btn.textContent = label;
     setTimeout(() => { btn.textContent = old; }, 1200);
   }
-  $('copy-snippet').addEventListener('click', e => { copy($('snippet-box').textContent); flash(e.currentTarget); });
-  $('copy-response').addEventListener('click', e => { copy(lastResponseText); flash(e.currentTarget); });
-  $('copy-headers').addEventListener('click', e => { copy(lastHeadersText); flash(e.currentTarget); });
+  $('copy-snippet').addEventListener('click', async e => {
+    flash(e.currentTarget, (await copy($('snippet-box').textContent)) ? 'copiado' : 'no se pudo');
+  });
+  $('copy-response').addEventListener('click', async e => {
+    flash(e.currentTarget, (await copy(lastResponseText)) ? 'copiado' : 'no se pudo');
+  });
+  $('copy-headers').addEventListener('click', async e => {
+    flash(e.currentTarget, (await copy(lastHeadersText)) ? 'copiado' : 'no se pudo');
+  });
 
   /* ---------- PREVIEW ---------- */
-  /** URL de la imagen actualmente en pantalla, para revocar su blob: al reemplazarla. */
+  /** URL de la imagen actualmente en pantalla, para revocar su blob al reemplazarla. */
   let shownBlobUrl = null;
+  /** Token monotónico: solo la respuesta más reciente puede pintar el preview.
+   *  Sin esto, dos respuestas rápidas (vista previa en vivo) se pisan y el
+   *  marco queda congelado con la imagen anterior o en blanco. */
+  let previewToken = 0;
 
   function resetPreview(message) {
+    previewToken++; // invalida cualquier carga en vuelo
     const frame = $('preview-frame');
     frame.classList.remove('loading', 'error', 'has-image');
     frame.innerHTML = `<div class="placeholder">${escapeHtml(message || '')}</div>`;
@@ -319,31 +356,34 @@ document.addEventListener('DOMContentLoaded', () => {
    * cuando terminó de decodificar: así nunca se ve un ícono roto ni un hueco vacío.
    */
   function showPreviewImage(blobUrl, meta) {
+    const token = ++previewToken;
     const frame = $('preview-frame');
-    const previousUrl = shownBlobUrl;
     const img = new Image();
     img.alt = 'Vista previa de la respuesta del endpoint';
     img.decoding = 'async';
     img.addEventListener('load', () => {
       // Si llegó otra respuesta mientras tanto, esta ya no sirve.
-      if (shownBlobUrl !== previousUrl) { URL.revokeObjectURL(blobUrl); return; }
+      if (token !== previewToken) { URL.revokeObjectURL(blobUrl); return; }
+      const old = shownBlobUrl;
       frame.innerHTML = '';
       frame.appendChild(img);
       frame.classList.add('has-image');
       frame.classList.remove('loading', 'error');
       shownBlobUrl = blobUrl;
-      if (previousUrl) URL.revokeObjectURL(previousUrl);
+      if (old && old !== blobUrl) URL.revokeObjectURL(old);
     }, { once: true });
     img.addEventListener('error', () => {
-      // La URL blob ya no es válida (petición abortada): se libera y no se toca el marco.
+      // El blob no se pudo decodificar: se libera y se avisa solo si sigue
+      // siendo la respuesta vigente.
       URL.revokeObjectURL(blobUrl);
-      frame.classList.remove('loading');
+      if (token === previewToken) failPreview('La imagen llegó, pero no se pudo decodificar.');
     }, { once: true });
     img.src = blobUrl;
     $('preview-meta').textContent = meta || '';
   }
 
   function failPreview(message) {
+    previewToken++; // invalida cualquier carga en vuelo
     const frame = $('preview-frame');
     frame.classList.remove('loading', 'has-image');
     frame.classList.add('error');
