@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playground — API Console</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/ui/favicon.svg" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="/" class="brand">
+        <img src="/assets/ui/logo.svg" alt="" />
+        <span>API Console</span>
+        <small>v3</small>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Inicio</a>
+        <a href="/playground" class="nav-link active">Playground</a>
+        <a href="/api/endpoints" class="nav-link">Catálogo JSON</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="console-header">
+      <div>
+        <h1>Playground</h1>
+        <p>Ejecuta cualquier endpoint con parámetros en vivo y copia el código de integración.</p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="meta-pill ok" id="summary-badge">cargando…</span>
+        <span class="meta-pill" id="hits-badge">0 peticiones</span>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <input type="text" id="endpoint-search" class="search-input" placeholder="Buscar por ruta, nombre o descripción…  ( / )" autocomplete="off" />
+      <div class="pills" id="method-pills">
+        <button type="button" class="pill active" data-method="ALL">Todos</button>
+        <button type="button" class="pill" data-method="GET">GET</button>
+        <button type="button" class="pill" data-method="POST">POST</button>
+      </div>
+      <div class="pills" id="category-pills"></div>
+    </section>
+
+    <section class="endpoint-list" id="endpoint-list"></section>
+  </main>
+
+  <!-- Modal de ejecución -->
+  <div class="modal-backdrop" id="exec-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="method-badge" id="modal-method">GET</span>
+        <span class="path" id="modal-path">/api/…</span>
+        <button type="button" class="modal-close" id="modal-close" title="Cerrar (Esc)">×</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <p id="modal-description" style="color:var(--muted); font-size:13.5px; margin:0 0 4px;"></p>
+          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+            PARÁMETROS
+            <button type="button" class="snippet-tab" id="reset-params">restaurar ejemplos</button>
+          </div>
+          <form id="params-form"></form>
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <button type="submit" form="params-form" class="btn btn-primary" style="flex:1;">Ejecutar</button>
+            <a href="#" target="_blank" rel="noopener" id="open-raw" class="btn btn-outline">Abrir URL</a>
+          </div>
+
+          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+            CÓDIGO DE INTEGRACIÓN
+            <button type="button" class="snippet-tab" id="copy-snippet">copiar</button>
+          </div>
+          <div class="snippet-tabs" id="snippet-tabs">
+            <button type="button" class="snippet-tab active" data-lang="url">URL</button>
+            <button type="button" class="snippet-tab" data-lang="curl">cURL</button>
+            <button type="button" class="snippet-tab" data-lang="js">fetch</button>
+            <button type="button" class="snippet-tab" data-lang="python">Python</button>
+          </div>
+          <pre class="code-block" id="snippet-box" style="min-height:120px;"></pre>
+        </div>
+
+        <div>
+          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+            RESPUESTA
+            <button type="button" class="snippet-tab" id="copy-response">copiar</button>
+          </div>
+          <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+            <span class="meta-pill" id="resp-status">status: —</span>
+            <span class="meta-pill" id="resp-time">— ms</span>
+            <span class="meta-pill" id="resp-type">—</span>
+          </div>
+          <div class="response-viewer" id="response-viewer">
+            <div class="placeholder">Ejecuta el endpoint para ver la respuesta.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div><strong>API Console</strong> — ejecución directa, sin clave.</div>
+      <div><a href="/api/endpoints">GET /api/endpoints</a></div>
+    </div>
+  </footer>
+
+  <script src="/js/playground.js"></script>
+</body>
+</html>
