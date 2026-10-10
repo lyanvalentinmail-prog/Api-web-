@@ -1,0 +1,1044 @@
+[
+  {
+    "id": "ext-catfact-fact",
+    "name": "Dato curioso sobre gatos",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/catfact/fact",
+    "methods": ["GET"],
+    "summary": "Devuelve un dato curioso sobre gatos desde Cat Fact Ninja (API de terceros, sin clave).",
+    "description": "Proxy de solo lectura hacia catfact.ninja. El servidor valida los parámetros, aplica un timeout de 8 segundos y conserva la respuesta original del proveedor en data.raw. Los valores son distintos en cada llamada.",
+    "provider": "Cat Fact Ninja",
+    "source": {
+      "providerId": "catfact",
+      "provider": "Cat Fact Ninja",
+      "host": "catfact.ninja",
+      "baseUrl": "https://catfact.ninja",
+      "docUrl": "https://catfact.ninja/",
+      "checkPath": "/fact",
+      "cacheSeconds": 60,
+      "limits": "No pide registro ni API key. La documentación del proveedor indica un límite aproximado de 100 peticiones por hora; este servidor cachea la respuesta 60 segundos para no agotarlo.",
+      "terms": "Datos de terceros. La disponibilidad depende de catfact.ninja; si el proveedor falla se devuelve 502/504 explicando el motivo."
+    },
+    "parameters": [
+      { "name": "max_length", "in": "query", "type": "integer", "required": false, "example": "120", "description": "Longitud máxima del dato devuelto por el proveedor (10 a 500 caracteres)." }
+    ],
+    "exampleRequest": "GET /api/external/catfact/fact?max_length=120",
+    "exampleNote": "Ejemplo: los valores cambian en cada llamada real.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "fact": "Cats sleep for around 13 to 16 hours a day.", "length": 43 },
+          "provider": "Cat Fact Ninja",
+          "providerUrl": "https://catfact.ninja/fact?max_length=120",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 412
+        },
+        "meta": { "endpoint": "/api/external/catfact/fact", "method": "GET", "durationMs": 415, "timestamp": "2026-10-10T18:03:00.000Z", "requestId": "aa10ff42" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw", "type": "object", "description": "Respuesta original del proveedor, sin modificar." },
+      { "name": "data.cached", "type": "boolean", "description": "true si se sirvió de la caché interna para respetar los límites del proveedor." }
+    ],
+    "errors": [
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "catfact.ninja no respondió o rechazó la petición." },
+      { "status": 504, "code": "UPSTREAM_TIMEOUT", "message": "El proveedor tardó más de 8 segundos." }
+    ],
+    "tags": ["terceros", "proxies", "animales"]
+  },
+  {
+    "id": "ext-catfact-facts",
+    "name": "Lista de datos curiosos de gatos",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/catfact/facts",
+    "methods": ["GET"],
+    "summary": "Devuelve varios datos curiosos sobre gatos con paginación del proveedor.",
+    "description": "Proxy hacia https://catfact.ninja/facts. El límite de elementos lo impone el proveedor (máximo 100 por página); aquí se limita a 50 para mantener las respuestas pequeñas.",
+    "provider": "Cat Fact Ninja",
+    "source": {
+      "providerId": "catfact",
+      "provider": "Cat Fact Ninja",
+      "host": "catfact.ninja",
+      "baseUrl": "https://catfact.ninja",
+      "docUrl": "https://catfact.ninja/",
+      "checkPath": "/fact",
+      "cacheSeconds": 120,
+      "limits": "Sin API key. Límite aproximado indicado por el proveedor: 100 peticiones por hora. Caché interna de 120 segundos.",
+      "terms": "Datos de terceros sujetos a la disponibilidad de catfact.ninja."
+    },
+    "parameters": [
+      { "name": "limit", "in": "query", "type": "integer", "required": false, "example": "5", "default": "5", "description": "Cuántos datos devolver (1 a 50)." },
+      { "name": "page", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Página solicitada al proveedor (1 a 20)." }
+    ],
+    "exampleRequest": "GET /api/external/catfact/facts?limit=2",
+    "exampleNote": "Ejemplo: el contenido real lo decide el proveedor.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "current_page": 1, "data": [{ "fact": "Cats can make over 100 different sounds.", "length": 39 }], "total": 41, "per_page": 2 },
+          "provider": "Cat Fact Ninja",
+          "providerUrl": "https://catfact.ninja/facts?limit=2&page=1",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 388
+        },
+        "meta": { "endpoint": "/api/external/catfact/facts", "method": "GET", "durationMs": 390, "timestamp": "2026-10-10T18:03:01.000Z", "requestId": "bb22cc31" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.data", "type": "array<object>", "description": "Lista de datos curiosos tal como la devuelve el proveedor." }
+    ],
+    "errors": [
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "El proveedor no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "animales"]
+  },
+  {
+    "id": "ext-dogs-random",
+    "name": "Foto aleatoria de perro",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/dogs/random",
+    "methods": ["GET"],
+    "summary": "Devuelve la URL de una imagen aleatoria de perro desde Dog CEO (terceros, sin clave).",
+    "description": "Proxy hacia https://dog.ceo/api/breeds/image/random. La respuesta incluye la URL directa de la imagen para que la abras en el navegador o la uses en tu interfaz; la imagen la sirve el proveedor, no este servidor.",
+    "provider": "Dog CEO",
+    "source": {
+      "providerId": "dogceo",
+      "provider": "Dog CEO",
+      "host": "dog.ceo",
+      "baseUrl": "https://dog.ceo/api",
+      "docUrl": "https://dog.ceo/dog-api/documentation/",
+      "checkPath": "/breeds/image/random",
+      "cacheSeconds": 15,
+      "limits": "No requiere clave ni registro. El proveedor no publica un límite exacto; pide un uso razonable. Caché interna de 15 segundos.",
+      "terms": "Imágenes servidas por dog.ceo; el proveedor advierte que pueden ser retiradas y no ofrece garantía de disponibilidad."
+    },
+    "parameters": [],
+    "exampleRequest": "GET /api/external/dogs/random",
+    "exampleNote": "Ejemplo: la URL de la imagen cambia en cada llamada.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "message": "https://images.dog.ceo/breeds/husky/n02110185_10047.jpg", "status": "success" },
+          "provider": "Dog CEO",
+          "providerUrl": "https://dog.ceo/api/breeds/image/random",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 246
+        },
+        "meta": { "endpoint": "/api/external/dogs/random", "method": "GET", "durationMs": 248, "timestamp": "2026-10-10T18:03:02.000Z", "requestId": "cc33dd44" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.message", "type": "string", "description": "URL de la imagen aleatoria." },
+      { "name": "data.raw.status", "type": "string", "description": "\"success\" cuando el proveedor responde bien." }
+    ],
+    "errors": [
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "dog.ceo no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "imágenes"]
+  },
+  {
+    "id": "ext-dogs-breed",
+    "name": "Foto aleatoria de una raza concreta",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/dogs/breed/:breed/random",
+    "methods": ["GET"],
+    "summary": "Devuelve una imagen aleatoria de la raza de perro que indiques.",
+    "description": "Proxy hacia https://dog.ceo/api/breed/{raza}/images/random. Las razas se validan con una lista en minúsculas y guiones (por ejemplo husky, german-shepherd, shiba). Para razas con subraza el proveedor usa el formato raza/subraza.",
+    "provider": "Dog CEO",
+    "source": {
+      "providerId": "dogceo",
+      "provider": "Dog CEO",
+      "host": "dog.ceo",
+      "baseUrl": "https://dog.ceo/api",
+      "docUrl": "https://dog.ceo/dog-api/documentation/",
+      "checkPath": "/breeds/image/random",
+      "cacheSeconds": 15,
+      "limits": "Sin clave. Uso razonable solicitado por el proveedor. Caché interna de 15 segundos.",
+      "terms": "Lista de razas y disponibilidad gestionadas por dog.ceo."
+    },
+    "parameters": [
+      { "name": "breed", "in": "path", "type": "string", "required": true, "example": "husky", "description": "Nombre de la raza en minúsculas (letras y guiones), por ejemplo husky, beagle o shiba." }
+    ],
+    "exampleRequest": "GET /api/external/dogs/breed/husky/random",
+    "exampleNote": "Ejemplo: la URL de la imagen cambia en cada llamada.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "message": "https://images.dog.ceo/breeds/husky/n02110185_10047.jpg", "status": "success" },
+          "provider": "Dog CEO",
+          "providerUrl": "https://dog.ceo/api/breed/husky/images/random",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 233
+        },
+        "meta": { "endpoint": "/api/external/dogs/breed/husky/random", "method": "GET", "durationMs": 235, "timestamp": "2026-10-10T18:03:03.000Z", "requestId": "dd44ee55" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.message", "type": "string", "description": "URL de la imagen de la raza solicitada." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_FORMAT", "message": "El nombre de la raza no cumple el formato permitido." },
+      { "status": 404, "code": "UPSTREAM_NOT_FOUND", "message": "El proveedor no conoce esa raza (suele responder con status 404)." }
+    ],
+    "tags": ["terceros", "proxies", "imágenes"]
+  },
+  {
+    "id": "ext-ip",
+    "name": "IP pública del servidor",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/ip",
+    "methods": ["GET"],
+    "summary": "Devuelve la IP pública desde la que sale este servidor, según ipify (terceros, sin clave).",
+    "description": "Proxy hacia https://api.ipify.org?format=json. Ten en cuenta que la IP devuelta es la del servidor que ejecuta FreeAPI Hub, no la tuya: útil para depurar despliegues detrás de proxies.",
+    "provider": "ipify",
+    "source": {
+      "providerId": "ipify",
+      "provider": "ipify",
+      "host": "api.ipify.org",
+      "baseUrl": "https://api.ipify.org",
+      "docUrl": "https://www.ipify.org/",
+      "checkPath": "/?format=json",
+      "cacheSeconds": 300,
+      "limits": "Sin registro ni clave. El proveedor no publica límite explícito para uso moderado; caché interna de 300 segundos porque la IP del servidor cambia poco.",
+      "terms": "Servicio de terceros. No se envía ningún dato tuyo al proveedor, sólo la petición del propio servidor."
+    },
+    "parameters": [],
+    "exampleRequest": "GET /api/external/ip",
+    "exampleNote": "Ejemplo: se muestra una IP de documentación; la real será la del servidor.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "ip": "203.0.113.10" },
+          "provider": "ipify",
+          "providerUrl": "https://api.ipify.org?format=json",
+          "httpStatus": 200,
+          "cached": true,
+          "durationMs": 0
+        },
+        "meta": { "endpoint": "/api/external/ip", "method": "GET", "durationMs": 1, "timestamp": "2026-10-10T18:03:04.000Z", "requestId": "ee55ff66" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.ip", "type": "string", "description": "IP pública del servidor que aloja FreeAPI Hub." }
+    ],
+    "errors": [
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "ipify no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "red"]
+  },
+  {
+    "id": "ext-ip-geo",
+    "name": "Geolocalización aproximada de una IP",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/ip-geo",
+    "methods": ["GET"],
+    "summary": "Devuelve país, ciudad y proveedor asociados a una dirección IP, según ipwho.is (terceros, sin clave).",
+    "description": "Proxy hacia https://ipwho.is/{ip}. La IP se valida en el servidor con una expresión regular antes de construir la URL, así que no se puede usar este endpoint para llamar a direcciones arbitrarias. La precisión es aproximada y no sirve como prueba de ubicación real.",
+    "provider": "ipwho.is",
+    "source": {
+      "providerId": "ipwhois",
+      "provider": "ipwho.is",
+      "host": "ipwho.is",
+      "baseUrl": "https://ipwho.is",
+      "docUrl": "https://ipwho.is/",
+      "checkPath": "/8.8.8.8",
+      "cacheSeconds": 300,
+      "limits": "Plan gratuito sin clave, limitado por el proveedor (anuncia unas 10.000 consultas al mes por IP). Caché interna de 300 segundos por IP consultada.",
+      "terms": "Geolocalización aproximada proporcionada por ipwho.is. No la uses para decisiones críticas."
+    },
+    "parameters": [
+      { "name": "ip", "in": "query", "type": "string", "required": true, "example": "8.8.8.8", "description": "Dirección IPv4 o IPv6 a consultar." }
+    ],
+    "exampleRequest": "GET /api/external/ip-geo?ip=8.8.8.8",
+    "exampleNote": "Ejemplo simplificado; el proveedor devuelve bastantes más campos.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "ip": "8.8.8.8", "success": true, "country": "United States", "city": "Mountain View", "connection": { "isp": "Google LLC" } },
+          "provider": "ipwho.is",
+          "providerUrl": "https://ipwho.is/8.8.8.8",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 302
+        },
+        "meta": { "endpoint": "/api/external/ip-geo", "method": "GET", "durationMs": 305, "timestamp": "2026-10-10T18:03:05.000Z", "requestId": "ff66aa77" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.country", "type": "string", "description": "País estimado por el proveedor." },
+      { "name": "data.raw.success", "type": "boolean", "description": "false cuando el proveedor no puede resolver la IP." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro ip." },
+      { "status": 400, "code": "INVALID_FORMAT", "message": "El valor de ip no es una IPv4 o IPv6 válida." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "ipwho.is no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "geolocalización"]
+  },
+  {
+    "id": "ext-weather",
+    "name": "Clima actual y previsión",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/weather",
+    "methods": ["GET"],
+    "summary": "Meteorología actual y previsión por horas/días para una coordenada, con Open-Meteo (terceros, sin clave).",
+    "description": "Open-Meteo no pide clave ni registro para uso no comercial: es una de las pocas APIs meteorológicas que se puede usar directamente desde este tipo de proyecto. Indica latitud y longitud (puedes obtenerlas con /api/external/geocode) y elige qué bloques quieres: current, hourly y daily. Los bloques llevan por defecto un conjunto razonable de variables meteorológicas.",
+    "provider": "Open-Meteo",
+    "source": {
+      "providerId": "openmeteo",
+      "provider": "Open-Meteo",
+      "host": "api.open-meteo.com",
+      "baseUrl": "https://api.open-meteo.com/v1",
+      "docUrl": "https://open-meteo.com/en/docs",
+      "checkPath": "/forecast?latitude=40.4168&longitude=-3.7038&current=temperature_2m&timezone=UTC",
+      "cacheSeconds": 300,
+      "limits": "Gratis y sin clave para uso no comercial (hasta 10.000 peticiones al día según su web). Con uso comercial piden suscripción; es el usuario del proyecto quien debe respetar esa condición. Caché interna de 300 segundos.",
+      "terms": "Datos de terceros de Open-Meteo bajo licencia CC BY 4.0; se debe citar al proveedor si se publican los datos."
+    },
+    "parameters": [
+      { "name": "latitude", "in": "query", "type": "number", "required": true, "example": "40.4168", "description": "Latitud entre -90 y 90." },
+      { "name": "longitude", "in": "query", "type": "number", "required": true, "example": "-3.7038", "description": "Longitud entre -180 y 180." },
+      { "name": "current", "in": "query", "type": "boolean", "required": false, "example": "true", "default": "true", "description": "Incluye el bloque con las condiciones actuales." },
+      { "name": "hourly", "in": "query", "type": "boolean", "required": false, "example": "false", "default": "false", "description": "Incluye previsión por horas (24 h)." },
+      { "name": "daily", "in": "query", "type": "boolean", "required": false, "example": "true", "default": "true", "description": "Incluye previsión por días (7 días)." },
+      { "name": "timezone", "in": "query", "type": "string", "required": false, "example": "auto", "default": "auto", "description": "Zona horaria del proveedor (auto o una zona IANA)." }
+    ],
+    "exampleRequest": "GET /api/external/weather?latitude=40.4168&longitude=-3.7038",
+    "exampleNote": "Ejemplo recortado; el proveedor devuelve además unidades, elevación y más variables.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": {
+            "latitude": 40.4168,
+            "longitude": -3.7038,
+            "timezone": "Europe/Madrid",
+            "current": { "time": "2026-10-10T20:00", "temperature_2m": 19.4, "wind_speed_10m": 8.1 },
+            "daily": { "time": ["2026-10-10", "2026-10-11"], "temperature_2m_max": [22.1, 21.4], "temperature_2m_min": [13.2, 12.9] }
+          },
+          "provider": "Open-Meteo",
+          "providerUrl": "https://api.open-meteo.com/v1/forecast?latitude=40.4168&longitude=-3.7038&current=temperature_2m,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 419
+        },
+        "meta": { "endpoint": "/api/external/weather", "method": "GET", "durationMs": 422, "timestamp": "2026-10-10T18:03:06.000Z", "requestId": "11aa22bb" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.current", "type": "object", "description": "Condiciones actuales (temperatura, humedad, viento) cuando se pide current=true." },
+      { "name": "data.raw.daily", "type": "object", "description": "Arrays paralelos con fechas y máximas/mínimas para los próximos 7 días." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Faltan latitude o longitude." },
+      { "status": 400, "code": "INVALID_NUMBER", "message": "Las coordenadas no son números o están fuera de rango." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "Open-Meteo no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "clima"]
+  },
+  {
+    "id": "ext-geocode",
+    "name": "Buscar coordenadas de una ciudad",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/geocode",
+    "methods": ["GET"],
+    "summary": "Convierte un nombre de ciudad en coordenadas y metadatos usando Open-Meteo Geocoding (terceros, sin clave).",
+    "description": "Complemento perfecto de /api/external/weather: busca el nombre y usa latitud/longitud en la llamada del clima. Devuelve una lista de coincidencias ordenadas por relevancia, con su país y su zona horaria.",
+    "provider": "Open-Meteo Geocoding",
+    "source": {
+      "providerId": "openmeteogeo",
+      "provider": "Open-Meteo Geocoding",
+      "host": "geocoding-api.open-meteo.com",
+      "baseUrl": "https://geocoding-api.open-meteo.com/v1",
+      "docUrl": "https://open-meteo.com/en/docs/geocoding-api",
+      "checkPath": "/search?name=Madrid&count=1",
+      "cacheSeconds": 600,
+      "limits": "Gratis y sin clave para uso no comercial. Caché interna de 600 segundos por búsqueda.",
+      "terms": "Datos de Open-Meteo; la geocodificación inversa no está disponible en este endpoint."
+    },
+    "parameters": [
+      { "name": "name", "in": "query", "type": "string", "required": true, "example": "Bogotá", "description": "Nombre de la ciudad o lugar (mínimo 2 caracteres)." },
+      { "name": "count", "in": "query", "type": "integer", "required": false, "example": "3", "default": "3", "description": "Número de coincidencias (1 a 10)." },
+      { "name": "language", "in": "query", "type": "string", "required": false, "example": "es", "default": "es", "description": "Idioma de los nombres de lugar." }
+    ],
+    "exampleRequest": "GET /api/external/geocode?name=Bogotá&count=1",
+    "exampleNote": "Ejemplo recortado; el proveedor incluye población, elevación y más campos.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "results": [{ "id": 3688689, "name": "Bogotá", "latitude": 4.60971, "longitude": -74.08175, "country": "Colombia", "timezone": "America/Bogota" }] },
+          "provider": "Open-Meteo Geocoding",
+          "providerUrl": "https://geocoding-api.open-meteo.com/v1/search?name=Bogot%C3%A1&count=1&language=es",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 281
+        },
+        "meta": { "endpoint": "/api/external/geocode", "method": "GET", "durationMs": 284, "timestamp": "2026-10-10T18:03:07.000Z", "requestId": "22bb33cc" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.results", "type": "array<object>", "description": "Coincidencias con latitude, longitude, country y timezone. Puede venir vacío u omitirse si no hay resultados." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro name." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "El servicio de geocodificación no respondió." }
+    ],
+    "tags": ["terceros", "proxies", "geocodificación"]
+  },
+  {
+    "id": "ext-countries-code",
+    "name": "Datos de un país por código",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/countries/:code",
+    "methods": ["GET"],
+    "summary": "Devuelve información de un país por su código ISO (ES, MX, CO…) desde Rest Countries (terceros, sin clave).",
+    "description": "Proxy hacia restcountries.com con una lista de campos reducida para que la respuesta sea manejable (nombre, capital, región, población, monedas, idiomas, bandera, zona horaria). Con la etiqueta es + compatibilidad si sigues en Node 18.",
+    "provider": "Rest Countries",
+    "source": {
+      "providerId": "restcountries",
+      "provider": "Rest Countries",
+      "host": "restcountries.com",
+      "baseUrl": "https://restcountries.com/v3.1",
+      "docUrl": "https://restcountries.com/",
+      "checkPath": "/alpha/ES?fields=name,cca2,capital,region,population",
+      "cacheSeconds": 3600,
+      "limits": "Sin clave ni registro. El proveedor limita el volumen por IP y no garantiza disponibilidad continua. Caché interna de 1 hora por código.",
+      "terms": "Datos abiertos de terceros. Rest Countries pide no usarlo como fuente legal definitiva."
+    },
+    "parameters": [
+      { "name": "code", "in": "path", "type": "string", "required": true, "example": "ES", "description": "Código ISO 3166-1 alfa-2 o alfa-3 (por ejemplo ES, ESP, MX, MEX)." }
+    ],
+    "exampleRequest": "GET /api/external/countries/ES",
+    "exampleNote": "Ejemplo recortado; los campos solicitados al proveedor son los que se documentan aquí.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": [
+            {
+              "name": { "common": "Spain", "official": "Kingdom of Spain" },
+              "cca2": "ES",
+              "capital": ["Madrid"],
+              "region": "Europe",
+              "population": 47351567,
+              "currencies": { "EUR": { "name": "Euro", "symbol": "€" } },
+              "languages": { "spa": "Spanish" },
+              "timezones": ["UTC+01:00"]
+            }
+          ],
+          "provider": "Rest Countries",
+          "providerUrl": "https://restcountries.com/v3.1/alpha/ES?fields=name,cca2,cca3,capital,region,subregion,population,currencies,languages,flag,timezones,area",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 356
+        },
+        "meta": { "endpoint": "/api/external/countries/ES", "method": "GET", "durationMs": 359, "timestamp": "2026-10-10T18:03:08.000Z", "requestId": "33cc44dd" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw", "type": "array<object>", "description": "Lista con el país solicitado y los campos pedidos al proveedor." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_FORMAT", "message": "El código debe tener 2 o 3 letras ISO." },
+      { "status": 404, "code": "UPSTREAM_NOT_FOUND", "message": "El proveedor no reconoce ese código de país." }
+    ],
+    "tags": ["terceros", "proxies", "países"]
+  },
+  {
+    "id": "ext-countries-search",
+    "name": "Buscar países por nombre",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/countries",
+    "methods": ["GET"],
+    "summary": "Busca países por nombre parcial (en inglés) y devuelve los campos principales de cada coincidencia.",
+    "description": "Proxy hacia https://restcountries.com/v3.1/name/{nombre}. El proveedor busca en inglés (spain, mexico, colombia). Si necesitas resultados en español, usa /api/external/countries/:code con el código ISO.",
+    "provider": "Rest Countries",
+    "source": {
+      "providerId": "restcountries",
+      "provider": "Rest Countries",
+      "host": "restcountries.com",
+      "baseUrl": "https://restcountries.com/v3.1",
+      "docUrl": "https://restcountries.com/",
+      "checkPath": "/alpha/ES?fields=name,cca2,capital,region,population",
+      "cacheSeconds": 3600,
+      "limits": "Sin clave. Uso moderado solicitado por el proveedor. Caché interna de 1 hora por búsqueda.",
+      "terms": "Datos abiertos de terceros; los nombres se devuelven en el idioma de origen del proveedor."
+    },
+    "parameters": [
+      { "name": "name", "in": "query", "type": "string", "required": true, "example": "spain", "description": "Nombre del país en inglés o código parcial (mínimo 3 caracteres)." }
+    ],
+    "exampleRequest": "GET /api/external/countries?name=spain",
+    "exampleNote": "Ejemplo recortado a los campos solicitados.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": [{ "name": { "common": "Spain" }, "cca2": "ES", "capital": ["Madrid"], "region": "Europe", "population": 47351567 }],
+          "provider": "Rest Countries",
+          "providerUrl": "https://restcountries.com/v3.1/name/spain?fields=name,cca2,cca3,capital,region,subregion,population,currencies,languages,flag,timezones,area",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 344
+        },
+        "meta": { "endpoint": "/api/external/countries", "method": "GET", "durationMs": 346, "timestamp": "2026-10-10T18:03:09.000Z", "requestId": "44dd55ee" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw", "type": "array<object>", "description": "Países que coinciden con la búsqueda." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro name." },
+      { "status": 404, "code": "UPSTREAM_NOT_FOUND", "message": "No hay países que coincidan con ese nombre." }
+    ],
+    "tags": ["terceros", "proxies", "países"]
+  },
+  {
+    "id": "ext-genderize",
+    "name": "Género probable de un nombre",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/genderize",
+    "methods": ["GET"],
+    "summary": "Estima el género asociado a un nombre propio con su probabilidad, según Genderize.io (terceros, sin clave).",
+    "description": "Proxy hacia https://api.genderize.io. Es una estimación estadística basada en datos de nombres; puede equivocarse y no debe usarse para decisiones sobre personas. El plan gratuito del proveedor está limitado a 100 nombres al día por IP.",
+    "provider": "Genderize.io",
+    "source": {
+      "providerId": "genderize",
+      "provider": "Genderize.io",
+      "host": "api.genderize.io",
+      "baseUrl": "https://api.genderize.io",
+      "docUrl": "https://genderize.io/documentation",
+      "checkPath": "/?name=ana",
+      "cacheSeconds": 3600,
+      "limits": "Plan gratuito sin clave: 100 peticiones al día y 1.000 al mes por IP. Si el proveedor devuelve 429 se informa en el mensaje. Caché interna de 1 hora por nombre.",
+      "terms": "Estimación estadística de terceros, no un dato oficial. Úsala sólo con fines estadísticos o lúdicos."
+    },
+    "parameters": [
+      { "name": "name", "in": "query", "type": "string", "required": true, "example": "ana", "description": "Nombre propio (letras, 1 a 50 caracteres)." },
+      { "name": "country_id", "in": "query", "type": "string", "required": false, "example": "ES", "description": "Código de país de dos letras para afinar la estimación." }
+    ],
+    "exampleRequest": "GET /api/external/genderize?name=ana",
+    "exampleNote": "Ejemplo real de estructura; la probabilidad depende del nombre consultado.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "count": 1819, "name": "ana", "gender": "female", "probability": 0.99 },
+          "provider": "Genderize.io",
+          "providerUrl": "https://api.genderize.io?name=ana",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 264
+        },
+        "meta": { "endpoint": "/api/external/genderize", "method": "GET", "durationMs": 266, "timestamp": "2026-10-10T18:03:10.000Z", "requestId": "55ee66ff" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.gender", "type": "string", "description": "male, female o null si no hay datos suficientes." },
+      { "name": "data.raw.probability", "type": "number", "description": "Probabilidad entre 0 y 1 de la estimación." },
+      { "name": "data.raw.count", "type": "integer", "description": "Número de registros usados en la estimación." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_FORMAT", "message": "El nombre sólo puede contener letras." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "Genderize.io no respondió o se agotó la cuota gratuita (429)." }
+    ],
+    "tags": ["terceros", "proxies", "nombres"]
+  },
+  {
+    "id": "ext-nationalize",
+    "name": "Nacionalidades probables de un nombre",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/nationalize",
+    "methods": ["GET"],
+    "summary": "Devuelve los países más probables asociados a un nombre, según Nationalize.io (terceros, sin clave).",
+    "description": "Proxy hacia https://api.nationalize.io. Igual que Genderize, es una estimación estadística con fines lúdicos o analíticos, no un dato personal. Plan gratuito limitado por el proveedor.",
+    "provider": "Nationalize.io",
+    "source": {
+      "providerId": "nationalize",
+      "provider": "Nationalize.io",
+      "host": "api.nationalize.io",
+      "baseUrl": "https://api.nationalize.io",
+      "docUrl": "https://nationalize.io/documentation",
+      "checkPath": "/?name=ana",
+      "cacheSeconds": 3600,
+      "limits": "Plan gratuito sin clave: 100 peticiones al día y 1.000 al mes por IP (según el proveedor). Caché interna de 1 hora por nombre.",
+      "terms": "Estimación estadística de terceros. No la uses para identificar personas reales."
+    },
+    "parameters": [
+      { "name": "name", "in": "query", "type": "string", "required": true, "example": "ana", "description": "Nombre propio (letras, 1 a 50 caracteres)." }
+    ],
+    "exampleRequest": "GET /api/external/nationalize?name=ana",
+    "exampleNote": "Ejemplo real de estructura; los países y probabilidades varían por nombre.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "count": 1452, "name": "ana", "country": [{ "country_id": "ES", "probability": 0.21 }, { "country_id": "PT", "probability": 0.15 }] },
+          "provider": "Nationalize.io",
+          "providerUrl": "https://api.nationalize.io?name=ana",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 318
+        },
+        "meta": { "endpoint": "/api/external/nationalize", "method": "GET", "durationMs": 320, "timestamp": "2026-10-10T18:03:11.000Z", "requestId": "66ff77aa" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.country", "type": "array<object>", "description": "Países ordenados por probabilidad descendente." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_FORMAT", "message": "El nombre sólo puede contener letras." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "Nationalize.io no respondió o se agotó la cuota gratuita." }
+    ],
+    "tags": ["terceros", "proxies", "nombres"]
+  },
+  {
+    "id": "ext-agify",
+    "name": "Edad media estimada de un nombre",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/agify",
+    "methods": ["GET"],
+    "summary": "Estima la edad media de las personas con un nombre concreto, según Agify.io (terceros, sin clave).",
+    "description": "Proxy hacia https://api.agify.io. Es una predicción estadística, no la edad de nadie en concreto. Comparte el esquema de cuota gratuita de Genderize y Nationalize (el mismo proveedor).",
+    "provider": "Agify.io",
+    "source": {
+      "providerId": "agify",
+      "provider": "Agify.io",
+      "host": "api.agify.io",
+      "baseUrl": "https://api.agify.io",
+      "docUrl": "https://agify.io/documentation",
+      "checkPath": "/?name=ana",
+      "cacheSeconds": 3600,
+      "limits": "Plan gratuito sin clave: 100 peticiones al día y 1.000 al mes por IP (según el proveedor). Caché interna de 1 hora por nombre.",
+      "terms": "Predicción estadística de terceros; no es un dato personal ni debe usarse para perfilado."
+    },
+    "parameters": [
+      { "name": "name", "in": "query", "type": "string", "required": true, "example": "ana", "description": "Nombre propio (letras, 1 a 50 caracteres)." },
+      { "name": "country_id", "in": "query", "type": "string", "required": false, "example": "ES", "description": "Código de país de dos letras para afinar la estimación." }
+    ],
+    "exampleRequest": "GET /api/external/agify?name=ana",
+    "exampleNote": "Ejemplo real de estructura; la edad cambia según el nombre.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "count": 4281, "name": "ana", "age": 46 },
+          "provider": "Agify.io",
+          "providerUrl": "https://api.agify.io?name=ana",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 259
+        },
+        "meta": { "endpoint": "/api/external/agify", "method": "GET", "durationMs": 261, "timestamp": "2026-10-10T18:03:12.000Z", "requestId": "77aa88bb" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.age", "type": "integer", "description": "Edad media estimada. Puede ser null si no hay datos." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_FORMAT", "message": "El nombre sólo puede contener letras." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "Agify.io no respondió o se agotó la cuota gratuita." }
+    ],
+    "tags": ["terceros", "proxies", "nombres"]
+  },
+  {
+    "id": "ext-qr",
+    "name": "Generar código QR (imagen)",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/qr",
+    "methods": ["GET"],
+    "summary": "Genera un código QR PNG con el texto que envíes, usando goQR.me (terceros, sin clave).",
+    "description": "Este endpoint devuelve una imagen PNG binaria, así que la envuelve en JSON con el contenido en Base64 y un data URL listo para usar en HTML. El texto se valida y se codifica antes de construir la URL del proveedor.",
+    "provider": "goQR.me",
+    "source": {
+      "providerId": "goqr",
+      "provider": "goQR.me (api.qrserver.com)",
+      "host": "api.qrserver.com",
+      "baseUrl": "https://api.qrserver.com/v1",
+      "docUrl": "https://goqr.me/api/doc/create-qr-code/",
+      "checkPath": "/create-qr-code/?size=100x100&data=freeapi-hub",
+      "binary": true,
+      "cacheSeconds": 3600,
+      "limits": "Servicio gratuito sin clave. El proveedor pide no automatizar en exceso ni abusar del ancho de banda y recomienda cachear los QR; aquí se cachea y se limita el tamaño de la imagen a 512 KB.",
+      "terms": "La imagen la genera goQR.me. No envíes datos sensibles: el texto viaja al proveedor en la URL."
+    },
+    "parameters": [
+      { "name": "data", "in": "query", "type": "string", "required": true, "example": "https://ejemplo.com", "description": "Texto o URL a codificar (1 a 500 caracteres)." },
+      { "name": "size", "in": "query", "type": "integer", "required": false, "example": "300", "default": "300", "description": "Lado de la imagen en píxeles (100 a 1000)." },
+      { "name": "margin", "in": "query", "type": "integer", "required": false, "example": "4", "default": "4", "description": "Margen en píxeles (0 a 50)." }
+    ],
+    "exampleRequest": "GET /api/external/qr?data=https://ejemplo.com&size=300",
+    "exampleNote": "Ejemplo: el Base64 real es mucho más largo (varios KB).",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "contentType": "image/png",
+          "sizeBytes": 18432,
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AA...(recortado)",
+          "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AA...(recortado)",
+          "provider": "goQR.me (api.qrserver.com)",
+          "providerUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=4&data=https%3A%2F%2Fejemplo.com",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 288
+        },
+        "meta": { "endpoint": "/api/external/qr", "method": "GET", "durationMs": 290, "timestamp": "2026-10-10T18:03:13.000Z", "requestId": "88bb99cc" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.base64", "type": "string", "description": "Imagen PNG codificada en Base64." },
+      { "name": "data.dataUrl", "type": "string", "description": "data URL listo para poner en el atributo src de un <img>." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro data." },
+      { "status": 400, "code": "TEXT_TOO_LONG", "message": "El texto a codificar supera los 500 caracteres." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "goQR.me no respondió correctamente." }
+    ],
+    "tags": ["terceros", "imágenes", "qr"]
+  },
+  {
+    "id": "ext-users-random",
+    "name": "Usuarios de prueba aleatorios",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/users/random",
+    "methods": ["GET"],
+    "summary": "Genera usuarios ficticios completos con foto, correo y dirección, desde Random User Generator (terceros, sin clave).",
+    "description": "Proxy hacia https://randomuser.me/api/. Ideal para rellenar maquetas y pruebas automatizadas. Los datos son ficticios y las imágenes las sirve el proveedor.",
+    "provider": "Random User Generator",
+    "source": {
+      "providerId": "randomuser",
+      "provider": "Random User Generator",
+      "host": "randomuser.me",
+      "baseUrl": "https://randomuser.me/api",
+      "docUrl": "https://randomuser.me/documentation",
+      "checkPath": "/?results=1&nat=es",
+      "cacheSeconds": 30,
+      "limits": "Gratis y sin clave. El proveedor pide no hacer más de una petición por segundo de media y no descargar en masa su contenido; aquí se limita a 5 usuarios por llamada y se cachea 30 segundos.",
+      "terms": "Datos ficticios generados por un tercero. No corresponden a personas reales."
+    },
+    "parameters": [
+      { "name": "results", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Cuántos usuarios generar (1 a 5)." },
+      { "name": "nat", "in": "query", "type": "string", "required": false, "example": "es", "default": "es", "description": "Nacionalidad de los datos: es, fr, gb, us, mx, br, au, ca, de, dk, fi, ie, ir, nl, no, nz, tr, ch." }
+    ],
+    "exampleRequest": "GET /api/external/users/random?results=1&nat=es",
+    "exampleNote": "Ejemplo recortado; el proveedor devuelve muchos más campos (login, dirección completa, etc.).",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": {
+            "results": [
+              {
+                "gender": "female",
+                "name": { "title": "Mrs", "first": "Lucía", "last": "García" },
+                "email": "lucia.garcia@example.com",
+                "picture": { "large": "https://randomuser.me/api/portraits/women/44.jpg" },
+                "location": { "city": "Valencia", "country": "Spain" }
+              }
+            ],
+            "info": { "seed": "freeapi-hub", "results": 1, "page": 1, "version": "1.4" }
+          },
+          "provider": "Random User Generator",
+          "providerUrl": "https://randomuser.me/api/?results=1&nat=es",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 431
+        },
+        "meta": { "endpoint": "/api/external/users/random", "method": "GET", "durationMs": 433, "timestamp": "2026-10-10T18:03:14.000Z", "requestId": "99cc11dd" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.results", "type": "array<object>", "description": "Usuarios ficticios generados." },
+      { "name": "data.raw.info", "type": "object", "description": "Metadatos del proveedor (semilla, página, versión)." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_INTEGER", "message": "results debe ser un entero entre 1 y 5." },
+      { "status": 400, "code": "INVALID_ENUM", "message": "La nacionalidad no está entre las admitidas." }
+    ],
+    "tags": ["terceros", "proxies", "datos ficticios"]
+  },
+  {
+    "id": "ext-dad-joke",
+    "name": "Chiste aleatorio (en inglés)",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/jokes/random",
+    "methods": ["GET"],
+    "summary": "Devuelve un chiste aleatorio en inglés desde icanhazdadjoke (terceros, sin clave).",
+    "description": "Proxy hacia https://icanhazdadjoke.com/. El proveedor exige la cabecera Accept: application/json para devolver JSON; este servidor la añade automáticamente, por eso tu cliente no necesita hacer nada especial.",
+    "provider": "icanhazdadjoke.com",
+    "source": {
+      "providerId": "icanhazdadjoke",
+      "provider": "icanhazdadjoke.com",
+      "host": "icanhazdadjoke.com",
+      "baseUrl": "https://icanhazdadjoke.com",
+      "docUrl": "https://icanhazdadjoke.com/api",
+      "checkPath": "/",
+      "cacheSeconds": 30,
+      "limits": "Gratis y sin clave. El proveedor pide un uso moderado y que se muestre su atribución en las aplicaciones que lo usen. Caché interna de 30 segundos.",
+      "terms": "Contenido en inglés de terceros. Se debe mantener la referencia al proveedor."
+    },
+    "parameters": [],
+    "exampleRequest": "GET /api/external/jokes/random",
+    "exampleNote": "Ejemplo: el chiste real varía en cada llamada.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "id": "R7UfaahVfFd", "joke": "I'm reading a book about anti-gravity. It's impossible to put down!", "status": 200 },
+          "provider": "icanhazdadjoke.com",
+          "providerUrl": "https://icanhazdadjoke.com/",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 275
+        },
+        "meta": { "endpoint": "/api/external/jokes/random", "method": "GET", "durationMs": 277, "timestamp": "2026-10-10T18:03:15.000Z", "requestId": "12dd33ee" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.joke", "type": "string", "description": "Texto del chiste." },
+      { "name": "data.raw.id", "type": "string", "description": "Identificador del chiste en el proveedor." }
+    ],
+    "errors": [
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "icanhazdadjoke no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "humor"]
+  },
+  {
+    "id": "ext-books",
+    "name": "Buscar libros de dominio público",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/books",
+    "methods": ["GET"],
+    "summary": "Busca libros de Project Gutenberg por título o autor usando Gutendex (terceros, sin clave).",
+    "description": "Proxy hacia https://gutendex.com/books. Gutendex es un índice de los más de 70.000 libros de Project Gutenberg, con enlaces directos a los textos en varios formatos. Los textos son de dominio público, aunque conviene revisar la licencia de cada edición.",
+    "provider": "Gutendex (Project Gutenberg)",
+    "source": {
+      "providerId": "gutendex",
+      "provider": "Gutendex",
+      "host": "gutendex.com",
+      "baseUrl": "https://gutendex.com",
+      "docUrl": "https://gutendex.com/",
+      "checkPath": "/books?search=quijote&page=1",
+      "cacheSeconds": 600,
+      "limits": "Gratis y sin clave. El proyecto pide no saturarlo y ofrece los datos sin garantía de disponibilidad. Caché interna de 600 segundos.",
+      "terms": "Metadatos de Project Gutenberg. Los textos son de dominio público en su mayoría; verifica cada obra."
+    },
+    "parameters": [
+      { "name": "search", "in": "query", "type": "string", "required": true, "example": "quijote", "description": "Términos de búsqueda en título o autor (2 a 100 caracteres)." },
+      { "name": "language", "in": "query", "type": "string", "required": false, "example": "es", "description": "Código de idioma de dos letras (es, en, fr…)." },
+      { "name": "page", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Página de resultados (1 a 20)." }
+    ],
+    "exampleRequest": "GET /api/external/books?search=quijote&language=es",
+    "exampleNote": "Ejemplo recortado; el proveedor devuelve más libros y metadatos.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": {
+            "count": 74,
+            "next": "https://gutendex.com/books?search=quijote&language=es&page=2",
+            "results": [
+              {
+                "id": 2000,
+                "title": "Don Quijote",
+                "authors": [{ "name": "Cervantes Saavedra, Miguel de", "birth_year": 1547, "death_year": 1616 }],
+                "languages": ["es"],
+                "download_count": 12345
+              }
+            ]
+          },
+          "provider": "Gutendex",
+          "providerUrl": "https://gutendex.com/books?search=quijote&languages=es&page=1",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 512
+        },
+        "meta": { "endpoint": "/api/external/books", "method": "GET", "durationMs": 515, "timestamp": "2026-10-10T18:03:16.000Z", "requestId": "23ee44ff" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.results", "type": "array<object>", "description": "Libros encontrados con autores, idiomas y enlaces de descarga." },
+      { "name": "data.raw.count", "type": "integer", "description": "Total de libros que coinciden en el índice del proveedor." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro search." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "Gutendex no respondió correctamente." }
+    ],
+    "tags": ["terceros", "proxies", "libros"]
+  },
+  {
+    "id": "ext-wikipedia",
+    "name": "Buscar en Wikipedia en español",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/wikipedia/search",
+    "methods": ["GET"],
+    "summary": "Busca artículos en la Wikipedia en español a través de su API pública oficial (terceros, sin clave).",
+    "description": "Usa la API de acción de MediaWiki (es.wikipedia.org/w/api.php) con formato JSON. No requiere clave, pero Wikimedia pide incluir un User-Agent identificable; este servidor ya lo envía. Devuelve títulos, extractos y enlaces a los artículos.",
+    "provider": "Wikimedia (API de MediaWiki)",
+    "source": {
+      "providerId": "wikipedia",
+      "provider": "Wikimedia",
+      "host": "es.wikipedia.org",
+      "baseUrl": "https://es.wikipedia.org/w",
+      "docUrl": "https://www.mediawiki.org/wiki/API:Search",
+      "checkPath": "/api.php?action=query&list=search&srsearch=api&format=json&utf8=1&origin=*",
+      "cacheSeconds": 300,
+      "limits": "API pública y gratuita, sin clave. Wikimedia pide un uso razonable y no abusar de las consultas de alto coste; aquí se limita a 20 resultados y se cachea 300 segundos.",
+      "terms": "Contenido bajo licencia CC BY-SA de Wikimedia. Si publicas los textos, debes mantener la atribución."
+    },
+    "parameters": [
+      { "name": "search", "in": "query", "type": "string", "required": true, "example": "API web", "description": "Términos a buscar (2 a 200 caracteres)." },
+      { "name": "limit", "in": "query", "type": "integer", "required": false, "example": "5", "default": "5", "description": "Número de resultados (1 a 20)." },
+      { "name": "language", "in": "query", "type": "string", "required": false, "example": "es", "default": "es", "description": "Idioma de Wikipedia: es, en, pt, fr, de, it (lista limitada por seguridad)." }
+    ],
+    "exampleRequest": "GET /api/external/wikipedia/search?search=API web&limit=2",
+    "exampleNote": "Ejemplo recortado; el proveedor devuelve también el identificador de página y marcas de coincidencia.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": {
+            "batchcomplete": "",
+            "query": {
+              "searchinfo": { "totalhits": 15342 },
+              "search": [
+                { "ns": 0, "title": "API", "size": 42110, "wordcount": 4312, "snippet": "<span class=\"searchmatch\">API</span> es…" }
+              ]
+            }
+          },
+          "provider": "Wikimedia",
+          "providerUrl": "https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=API+web&srlimit=2&format=json&utf8=1",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 397
+        },
+        "meta": { "endpoint": "/api/external/wikipedia/search", "method": "GET", "durationMs": 399, "timestamp": "2026-10-10T18:03:17.000Z", "requestId": "34ff55aa" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw.query.search", "type": "array<object>", "description": "Resultados con título, tamaño del artículo, número de palabras y extracto con el término resaltado." },
+      { "name": "data.raw.query.searchinfo.totalhits", "type": "integer", "description": "Total de coincidencias en el índice de Wikipedia." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro search." },
+      { "status": 400, "code": "INVALID_ENUM", "message": "El idioma no está entre los admitidos." }
+    ],
+    "tags": ["terceros", "proxies", "enciclopedia"]
+  },
+  {
+    "id": "ext-crypto-price",
+    "name": "Precio de criptomonedas",
+    "category": "externas",
+    "type": "external",
+    "path": "/api/external/crypto/price",
+    "methods": ["GET"],
+    "summary": "Precio actual de criptomonedas en la moneda que elijas, desde la API pública de CoinGecko (terceros, sin clave).",
+    "description": "Usa el endpoint público sin clave de CoinGecko (/api/v3/simple/price). Este endpoint gratuito está fuertemente limitado en peticiones por minuto; si el proveedor responde 429, este servidor lo indica claramente y puedes reintentar. Los precios se ofrecen sin garantía y no sirven para operar.",
+    "provider": "CoinGecko (API pública sin clave)",
+    "source": {
+      "providerId": "coingecko",
+      "provider": "CoinGecko",
+      "host": "api.coingecko.com",
+      "baseUrl": "https://api.coingecko.com/api/v3",
+      "docUrl": "https://docs.coingecko.com/reference/simple-price",
+      "checkPath": "/simple/price?ids=bitcoin&vs_currencies=usd",
+      "cacheSeconds": 120,
+      "limits": "API pública sin clave con límite aproximado de 5-30 peticiones por minuto según la carga, y cuota mensual reducida. Caché interna de 120 segundos. Para uso intensivo CoinGecko recomienda su plan de pago; NO es obligatorio para este proyecto.",
+      "terms": "Datos de mercado de terceros con fines informativos. No constituyen asesoramiento financiero."
+    },
+    "parameters": [
+      { "name": "ids", "in": "query", "type": "string", "required": false, "example": "bitcoin,ethereum", "default": "bitcoin", "description": "Identificadores de CoinGecko separados por comas (por ejemplo bitcoin, ethereum, solana, dogecoin)." },
+      { "name": "vs_currencies", "in": "query", "type": "string", "required": false, "example": "usd,eur", "default": "usd", "description": "Monedas de referencia separadas por comas (usd, eur, mxn, cop, ars, brl…)." }
+    ],
+    "exampleRequest": "GET /api/external/crypto/price?ids=bitcoin&vs_currencies=usd,eur",
+    "exampleNote": "Ejemplo: los precios reales cambian constantemente.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "passthrough": true,
+          "raw": { "bitcoin": { "usd": 61234, "eur": 56432 } },
+          "provider": "CoinGecko",
+          "providerUrl": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur",
+          "httpStatus": 200,
+          "cached": false,
+          "durationMs": 526
+        },
+        "meta": { "endpoint": "/api/external/crypto/price", "method": "GET", "durationMs": 528, "timestamp": "2026-10-10T18:03:18.000Z", "requestId": "45aa66bb" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.raw", "type": "object", "description": "Objeto con un bloque por criptomoneda y el precio en cada moneda solicitada." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_FORMAT", "message": "Los identificadores o las monedas no tienen un formato válido." },
+      { "status": 502, "code": "UPSTREAM_UNAVAILABLE", "message": "CoinGecko no respondió o devolvió 429 por límite de peticiones." }
+    ],
+    "tags": ["terceros", "proxies", "finanzas"]
+  }
+]

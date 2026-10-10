@@ -1,0 +1,20 @@
+{
+  "name": "FreeAPI Hub",
+  "version": "1.0.0",
+  "tagline": "APIs públicas gratis, sin registro, sin login y sin API key",
+  "description": "Plataforma con un catálogo de APIs públicas y utilidades propias. Incluye probador de endpoints, documentación, ejemplos de código y página de estado con comprobaciones reales.",
+  "auth": "Ninguna. No se pide registro, correo, login ni API key para los endpoints públicos de este servidor.",
+  "license": "MIT",
+  "ownEndpointsPrefix": "/api",
+  "externalProxyPrefix": "/api/external",
+  "rateLimits": {
+    "general": "120 peticiones por minuto y por IP sobre /api/*",
+    "external": "30 peticiones por minuto y por IP sobre /api/external/* (además de los límites del proveedor)",
+    "write": "20 peticiones por minuto y por IP para los métodos POST, PUT, PATCH y DELETE"
+  },
+  "notes": [
+    "Los endpoints propios se ejecutan en este servidor y no dependen de terceros.",
+    "Los endpoints externos son proxies de solo lectura hacia APIs públicas de terceros: su disponibilidad depende del proveedor y se muestra en la página de estado.",
+    "Los datos del endpoint /api/demo/* viven en memoria: se reinician al reiniciar el servidor y pueden caducar."
+  ]
+}

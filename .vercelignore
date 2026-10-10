@@ -1,0 +1,17 @@
+# Archivos que no se suben al desplegar en Vercel.
+# El catálogo (shared/) SÍ se sube: lo necesita la función de /api.
+node_modules
+.git
+.github
+.env
+.env.*
+dev
+test
+coverage
+.nyc_output
+Dockerfile
+.dockerignore
+render.yaml
+Procfile
+*.log
+.DS_Store

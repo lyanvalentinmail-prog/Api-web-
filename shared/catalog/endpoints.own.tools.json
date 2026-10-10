@@ -1,0 +1,2060 @@
+[
+  {
+    "id": "text-reverse",
+    "name": "Invertir texto",
+    "category": "texto",
+    "type": "own",
+    "path": "/api/text/reverse",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Devuelve el texto recibido escrito al revés, respetando emojis y caracteres Unicode.",
+    "description": "Trabaja sobre puntos de código Unicode, así que los emojis y caracteres como ñ o á no se rompen. Acepta el texto por query (?text=hola) o en el cuerpo JSON con POST/PUT para textos más largos.",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "hola",
+        "description": "Texto a invertir (máximo 5000 caracteres)."
+      }
+    ],
+    "exampleRequest": "GET /api/text/reverse?text=hola",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "input": "hola",
+          "output": "aloh",
+          "inputLength": 4,
+          "outputLength": 4,
+          "algorithm": "code-point-reverse"
+        },
+        "meta": {
+          "endpoint": "/api/text/reverse",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:20.000Z",
+          "requestId": "3f7ba902"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.input",
+        "type": "string",
+        "description": "Texto original tal como se recibió."
+      },
+      {
+        "name": "data.output",
+        "type": "string",
+        "description": "Texto invertido."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro text."
+      },
+      {
+        "status": 400,
+        "code": "TEXT_TOO_LONG",
+        "message": "El texto supera los 5000 caracteres."
+      }
+    ],
+    "tags": [
+      "texto",
+      "transformación"
+    ]
+  },
+  {
+    "id": "text-uppercase",
+    "name": "Texto a mayúsculas",
+    "category": "texto",
+    "type": "own",
+    "path": "/api/text/uppercase",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Convierte el texto a MAYÚSCULAS (o a minúsculas con mode=lower).",
+    "description": "Usa toLocaleUpperCase('es-ES') para respetar las reglas del español. Con el parámetro mode puedes pedir minúsculas o la primera letra en mayúscula sin salir del mismo endpoint.",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "hola mundo",
+        "description": "Texto a convertir (máximo 5000 caracteres)."
+      },
+      {
+        "name": "mode",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "upper",
+        "enum": [
+          "upper",
+          "lower",
+          "capitalize"
+        ],
+        "default": "upper",
+        "description": "upper = MAYÚSCULAS, lower = minúsculas, capitalize = Primera Letra En Mayúscula."
+      }
+    ],
+    "exampleRequest": "GET /api/text/uppercase?text=hola mundo",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "input": "hola mundo",
+          "output": "HOLA MUNDO",
+          "mode": "upper",
+          "changed": true
+        },
+        "meta": {
+          "endpoint": "/api/text/uppercase",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:21.000Z",
+          "requestId": "71c0de55"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.output",
+        "type": "string",
+        "description": "Texto convertido según el modo."
+      },
+      {
+        "name": "data.changed",
+        "type": "boolean",
+        "description": "true si la conversión modificó el texto."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro text."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_ENUM",
+        "message": "mode no es upper, lower ni capitalize."
+      }
+    ],
+    "tags": [
+      "texto",
+      "transformación"
+    ]
+  },
+  {
+    "id": "text-slug",
+    "name": "Convertir texto en slug",
+    "category": "texto",
+    "type": "own",
+    "path": "/api/text/slug",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Transforma un título en una URL amigable: sin acentos, en minúsculas y separada por guiones.",
+    "description": "Elimina los signos diacríticos con normalize('NFD'), quita caracteres no permitidos y colapsa los separadores repetidos. Pensado para generar rutas o nombres de archivo a partir de un título.",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "¡Hola Mundo! Acentos y Ñ",
+        "description": "Texto a convertir (máximo 5000 caracteres)."
+      },
+      {
+        "name": "separator",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "-",
+        "enum": [
+          "-",
+          "_",
+          "."
+        ],
+        "default": "-",
+        "description": "Separador entre palabras."
+      }
+    ],
+    "exampleRequest": "GET /api/text/slug?text=¡Hola Mundo! Acentos y Ñ",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "input": "¡Hola Mundo! Acentos y Ñ",
+          "output": "hola-mundo-acentos-y-n",
+          "separator": "-",
+          "length": 21
+        },
+        "meta": {
+          "endpoint": "/api/text/slug",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:22.000Z",
+          "requestId": "2ab6ff70"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.output",
+        "type": "string",
+        "description": "Slug listo para usar en una URL."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro text."
+      }
+    ],
+    "tags": [
+      "texto",
+      "url"
+    ]
+  },
+  {
+    "id": "text-stats",
+    "name": "Estadísticas de texto",
+    "category": "texto",
+    "type": "own",
+    "path": "/api/text/stats",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Cuenta caracteres, palabras, frases, líneas y devuelve las palabras más repetidas.",
+    "description": "Todo el análisis se hace en el servidor con expresiones regulares sobre Unicode. El recuento de palabras ignora la puntuación y las palabras vacías más comunes del español se pueden omitir con stopwords=true.",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "Hola mundo. Hola de nuevo, mundo.",
+        "description": "Texto a analizar (máximo 5000 caracteres)."
+      },
+      {
+        "name": "top",
+        "in": "query",
+        "type": "integer",
+        "required": false,
+        "example": "5",
+        "default": "5",
+        "description": "Cuántas palabras frecuentes devolver (1 a 50)."
+      },
+      {
+        "name": "stopwords",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "default": "false",
+        "description": "Con true excluye las palabras vacías habituales del español."
+      }
+    ],
+    "exampleRequest": "GET /api/text/stats?text=Hola mundo. Hola de nuevo, mundo.",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "characters": 33,
+          "charactersNoSpaces": 27,
+          "words": 6,
+          "uniqueWords": 5,
+          "sentences": 2,
+          "lines": 1,
+          "paragraphs": 1,
+          "readingTimeSeconds": 2,
+          "longestWord": "mundo",
+          "topWords": [
+            {
+              "word": "hola",
+              "count": 2
+            },
+            {
+              "word": "mundo",
+              "count": 2
+            }
+          ],
+          "stopwordsExcluded": false
+        },
+        "meta": {
+          "endpoint": "/api/text/stats",
+          "method": "GET",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:23.000Z",
+          "requestId": "6c8f1a3d"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.topWords",
+        "type": "array<{word,count}>",
+        "description": "Palabras más repetidas, ordenadas de mayor a menor."
+      },
+      {
+        "name": "data.readingTimeSeconds",
+        "type": "integer",
+        "description": "Estimación de lectura a 200 palabras por minuto."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro text."
+      }
+    ],
+    "tags": [
+      "texto",
+      "análisis"
+    ]
+  },
+  {
+    "id": "text-count",
+    "name": "Ocurrencias de una subcadena",
+    "category": "texto",
+    "type": "own",
+    "path": "/api/text/count",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Cuenta cuántas veces aparece una palabra o subcadena dentro de un texto.",
+    "description": "Puede contar coincidencias literales o mediante expresión regular (regex=true), con la opción de ignorar mayúsculas y minúsculas. Las expresiones regulares se validan y se limitan a 200 caracteres.",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "El perro de San Roque no tiene rabo",
+        "description": "Texto donde buscar (máximo 5000 caracteres)."
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "roque",
+        "description": "Subcadena o patrón a buscar."
+      },
+      {
+        "name": "regex",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "default": "false",
+        "description": "Trata search como expresión regular de JavaScript."
+      },
+      {
+        "name": "ignoreCase",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "true",
+        "default": "true",
+        "description": "Ignora mayúsculas y minúsculas."
+      }
+    ],
+    "exampleRequest": "GET /api/text/count?text=El perro de San Roque no tiene rabo&search=roque",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "count": 1,
+          "search": "roque",
+          "isRegex": false,
+          "ignoreCase": true,
+          "positions": [
+            18
+          ],
+          "matches": [
+            "Roque"
+          ]
+        },
+        "meta": {
+          "endpoint": "/api/text/count",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:24.000Z",
+          "requestId": "ba5d7c19"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.count",
+        "type": "integer",
+        "description": "Número de coincidencias encontradas."
+      },
+      {
+        "name": "data.positions",
+        "type": "array<integer>",
+        "description": "Índice de cada coincidencia (máximo 50)."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta text o search."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_REGEX",
+        "message": "El patrón de búsqueda no es una expresión regular válida."
+      }
+    ],
+    "tags": [
+      "texto",
+      "búsqueda"
+    ]
+  },
+  {
+    "id": "json-validate",
+    "name": "Validar JSON",
+    "category": "json",
+    "type": "own",
+    "path": "/api/json/validate",
+    "methods": [
+      "POST",
+      "PUT"
+    ],
+    "summary": "Comprueba si un texto es JSON válido y, si no lo es, indica dónde está el error.",
+    "description": "Envía el JSON a validar de una de estas tres formas: cuerpo JSON con la forma { \"json\": \"{...}\" }, parámetro de consulta ?json=..., o cuerpo de texto plano (Content-Type: text/plain). Si envías un cuerpo JSON normal (por ejemplo {\"nombre\":\"Ana\"}), el endpoint también lo interpreta como válido y te devuelve su estructura. Nunca devuelve 400 por un JSON inválido: responde 200 con valid=false y el detalle del error, para que puedas usarlo como validador.",
+    "parameters": [
+      {
+        "name": "json",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "{\"name\":\"Ana\",\"age\":30}",
+        "description": "Texto JSON a validar. Alternativa: cuerpo de texto plano con Content-Type text/plain."
+      },
+      {
+        "name": "json",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "{\"a\":1}",
+        "description": "El mismo texto pero por query string (puede ser incómodo por el escapado)."
+      }
+    ],
+    "exampleRequest": "POST /api/json/validate  Content-Type: application/json  { \"json\": \"{\\\"name\\\":\\\"Ana\\\"}\" }",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "valid": true,
+          "inputLength": 15,
+          "sizeBytes": 15,
+          "type": "object",
+          "depth": 1,
+          "keys": [
+            "name"
+          ],
+          "value": {
+            "name": "Ana"
+          }
+        },
+        "meta": {
+          "endpoint": "/api/json/validate",
+          "method": "POST",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:25.000Z",
+          "requestId": "12ef90ab"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.valid",
+        "type": "boolean",
+        "description": "true si el texto se pudo parsear como JSON."
+      },
+      {
+        "name": "data.type",
+        "type": "string",
+        "description": "object, array, string, number, boolean o null."
+      },
+      {
+        "name": "data.depth",
+        "type": "integer",
+        "description": "Profundidad máxima de anidamiento."
+      },
+      {
+        "name": "data.error",
+        "type": "object",
+        "description": "Sólo cuando valid=false: mensaje, línea, columna y fragmento con el error señalado."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "No se recibió ningún JSON que validar."
+      },
+      {
+        "status": 413,
+        "code": "PAYLOAD_TOO_LARGE",
+        "message": "El JSON supera los 100 KB permitidos."
+      }
+    ],
+    "tags": [
+      "json",
+      "validación"
+    ]
+  },
+  {
+    "id": "json-format",
+    "name": "Formatear o minificar JSON",
+    "category": "json",
+    "type": "own",
+    "path": "/api/json/format",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "summary": "Indenta un JSON para leerlo mejor o lo comprime al mínimo, indicando cuánto has ganado.",
+    "description": "Acepta el JSON como cadena: ?json=... en GET o en el cuerpo JSON con {\"json\":\"...\"} en POST. Con mode=minify elimina todos los espacios innecesarios y te informa del ahorro en bytes.",
+    "parameters": [
+      {
+        "name": "json",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "{\"a\":1,\"b\":[1,2,3]}",
+        "description": "Texto JSON a formatear."
+      },
+      {
+        "name": "mode",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "pretty",
+        "enum": [
+          "pretty",
+          "minify"
+        ],
+        "default": "pretty",
+        "description": "pretty = indentado legible, minify = sin espacios."
+      },
+      {
+        "name": "indent",
+        "in": "query",
+        "type": "integer",
+        "required": false,
+        "example": "2",
+        "default": "2",
+        "description": "Espacios de indentación para mode=pretty (0 a 8)."
+      }
+    ],
+    "exampleRequest": "GET /api/json/format?json={\"a\":1,\"b\":[1,2]}",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "mode": "pretty",
+          "indent": 2,
+          "parsed": true,
+          "inputBytes": 17,
+          "outputBytes": 32,
+          "output": "{\n  \"a\": 1,\n  \"b\": [\n    1,\n    2\n  ]\n}"
+        },
+        "meta": {
+          "endpoint": "/api/json/format",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:26.000Z",
+          "requestId": "30bc7e12"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.output",
+        "type": "string",
+        "description": "JSON ya formateado o minificado."
+      },
+      {
+        "name": "data.inputBytes",
+        "type": "integer",
+        "description": "Tamaño original en bytes (UTF-8)."
+      }
+    ],
+    "errors": [
+      {
+        "status": 422,
+        "code": "INVALID_JSON",
+        "message": "El texto enviado no es JSON válido; se devuelve la posición del error."
+      }
+    ],
+    "tags": [
+      "json",
+      "formato"
+    ]
+  },
+  {
+    "id": "math-add",
+    "name": "Sumar dos números",
+    "category": "mates",
+    "type": "own",
+    "path": "/api/math/add",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Suma a y b y devuelve el resultado con el detalle de la operación.",
+    "description": "Acepta enteros, decimales (con punto o coma) y notación científica. Los valores no finitos y NaN se rechazan con 400 para evitar resultados silenciosamente incorrectos.",
+    "parameters": [
+      {
+        "name": "a",
+        "in": "query",
+        "type": "number",
+        "required": true,
+        "example": "5",
+        "description": "Primer sumando."
+      },
+      {
+        "name": "b",
+        "in": "query",
+        "type": "number",
+        "required": true,
+        "example": "3",
+        "description": "Segundo sumando."
+      }
+    ],
+    "exampleRequest": "GET /api/math/add?a=5&b=3",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "a": 5,
+          "b": 3,
+          "operation": "addition",
+          "result": 8,
+          "expression": "5 + 3 = 8"
+        },
+        "meta": {
+          "endpoint": "/api/math/add",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:27.000Z",
+          "requestId": "8c4d0f26"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.result",
+        "type": "number",
+        "description": "Resultado de la suma."
+      },
+      {
+        "name": "data.expression",
+        "type": "string",
+        "description": "Operación legible en texto."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta a o b."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_NUMBER",
+        "message": "a o b no son números válidos."
+      }
+    ],
+    "tags": [
+      "matemáticas",
+      "aritmética"
+    ]
+  },
+  {
+    "id": "math-multiply",
+    "name": "Multiplicar dos números",
+    "category": "mates",
+    "type": "own",
+    "path": "/api/math/multiply",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Multiplica a por b y devuelve el resultado con el detalle de la operación.",
+    "description": "Igual que /api/math/add pero con el producto. Todos los cálculos se hacen en este servidor con aritmética de coma flotante estándar.",
+    "parameters": [
+      {
+        "name": "a",
+        "in": "query",
+        "type": "number",
+        "required": true,
+        "example": "5",
+        "description": "Multiplicando."
+      },
+      {
+        "name": "b",
+        "in": "query",
+        "type": "number",
+        "required": true,
+        "example": "3",
+        "description": "Multiplicador."
+      }
+    ],
+    "exampleRequest": "GET /api/math/multiply?a=5&b=3",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "a": 5,
+          "b": 3,
+          "operation": "multiplication",
+          "result": 15,
+          "expression": "5 × 3 = 15"
+        },
+        "meta": {
+          "endpoint": "/api/math/multiply",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:28.000Z",
+          "requestId": "e4a71b08"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.result",
+        "type": "number",
+        "description": "Producto de a y b."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta a o b."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_NUMBER",
+        "message": "a o b no son números válidos."
+      }
+    ],
+    "tags": [
+      "matemáticas",
+      "aritmética"
+    ]
+  },
+  {
+    "id": "math-statistics",
+    "name": "Estadísticas de una lista de números",
+    "category": "mates",
+    "type": "own",
+    "path": "/api/math/statistics",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Calcula suma, media, mediana, moda, desviación típica, mínimo y máximo de tus datos.",
+    "description": "Envía los números separados por comas o espacios: ?numbers=1,2,3,4. Se calculan todas las medidas en el servidor; la desviación típica puede ser poblacional (por defecto) o muestral con sample=true.",
+    "parameters": [
+      {
+        "name": "numbers",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "1,2,3,4,5",
+        "description": "Lista de números separados por comas o espacios (máximo 50 valores)."
+      },
+      {
+        "name": "sample",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "default": "false",
+        "description": "true = desviación típica muestral (n-1), false = poblacional (n)."
+      }
+    ],
+    "exampleRequest": "GET /api/math/statistics?numbers=1,2,3,4,5",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "count": 5,
+          "values": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "sum": 15,
+          "mean": 3,
+          "median": 3,
+          "mode": [],
+          "min": 1,
+          "max": 5,
+          "range": 4,
+          "variance": 2,
+          "standardDeviation": 1.4142135623730951,
+          "sample": false,
+          "quartiles": {
+            "q1": 2,
+            "q2": 3,
+            "q3": 4
+          },
+          "sorted": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "meta": {
+          "endpoint": "/api/math/statistics",
+          "method": "GET",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:29.000Z",
+          "requestId": "7d19c4af"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.mean",
+        "type": "number",
+        "description": "Media aritmética."
+      },
+      {
+        "name": "data.median",
+        "type": "number",
+        "description": "Valor central (media de los dos centrales si hay un número par de datos)."
+      },
+      {
+        "name": "data.mode",
+        "type": "array<number>",
+        "description": "Valores más repetidos; vacío si ninguno se repite."
+      },
+      {
+        "name": "data.standardDeviation",
+        "type": "number",
+        "description": "Desviación típica poblacional o muestral según sample."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro numbers."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_NUMBER_LIST",
+        "message": "Alguno de los valores no es un número."
+      },
+      {
+        "status": 400,
+        "code": "TOO_MANY_ITEMS",
+        "message": "Se admiten como máximo 50 números."
+      }
+    ],
+    "tags": [
+      "matemáticas",
+      "estadística"
+    ]
+  },
+  {
+    "id": "util-base64",
+    "name": "Codificar y decodificar Base64",
+    "category": "utilidades",
+    "type": "own",
+    "path": "/api/util/base64",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "summary": "Convierte texto a Base64 (o Base64 a texto) con soporte completo de UTF-8.",
+    "description": "La conversión se hace con Buffer de Node.js respetando UTF-8, así que acentos, emojis y caracteres cirílicos se codifican y decodifican sin pérdidas. Con decode=true interpreta la entrada como Base64; urlSafe=true usa el alfabeto seguro para URLs (-_ sin relleno).",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "hola mundo",
+        "description": "Texto a codificar o Base64 a decodificar (máximo 5000 caracteres)."
+      },
+      {
+        "name": "decode",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "default": "false",
+        "description": "Con true decodifica Base64 a texto."
+      },
+      {
+        "name": "urlSafe",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "default": "false",
+        "description": "Con true usa el alfabeto Base64 seguro para URL sin relleno."
+      }
+    ],
+    "exampleRequest": "GET /api/util/base64?text=hola mundo",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "direction": "encode",
+          "urlSafe": false,
+          "input": "hola mundo",
+          "output": "aG9sYSBtdW5kbw==",
+          "inputBytes": 10,
+          "outputBytes": 16
+        },
+        "meta": {
+          "endpoint": "/api/util/base64",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:30.000Z",
+          "requestId": "51f0a2ce"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.direction",
+        "type": "string",
+        "description": "encode o decode según lo que se haya hecho."
+      },
+      {
+        "name": "data.output",
+        "type": "string",
+        "description": "Resultado de la conversión."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro text."
+      },
+      {
+        "status": 422,
+        "code": "INVALID_BASE64",
+        "message": "El texto no es Base64 válido."
+      }
+    ],
+    "tags": [
+      "utilidades",
+      "codificación"
+    ]
+  },
+  {
+    "id": "util-hash",
+    "name": "Hash SHA-256 / SHA-512",
+    "category": "utilidades",
+    "type": "own",
+    "path": "/api/util/hash",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "summary": "Calcula el resumen criptográfico (hash) de un texto o comprueba si un hash coincide.",
+    "description": "Usa el módulo crypto de Node.js en el servidor (SHA-256, SHA-512 o SHA-1 para compatibilidad heredada). Con verify puedes comparar un hash existente y obtener un booleano, útil para comprobaciones de integridad. Aviso: para almacenar contraseñas NO uses un hash simple, usa bcrypt/argon2.",
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "hola",
+        "description": "Texto del que calcular el hash (máximo 5000 caracteres)."
+      },
+      {
+        "name": "algorithm",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "sha256",
+        "enum": [
+          "sha256",
+          "sha512",
+          "sha1"
+        ],
+        "default": "sha256",
+        "description": "Algoritmo de resumen."
+      },
+      {
+        "name": "encoding",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "hex",
+        "enum": [
+          "hex",
+          "base64"
+        ],
+        "default": "hex",
+        "description": "Formato de salida del hash."
+      },
+      {
+        "name": "verify",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "a8fdd0b1...",
+        "description": "Hash esperado para comprobar (en el mismo formato de salida)."
+      }
+    ],
+    "exampleRequest": "GET /api/util/hash?text=hola&algorithm=sha256",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "algorithm": "sha256",
+          "encoding": "hex",
+          "inputBytes": 4,
+          "hash": "b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79",
+          "verified": null
+        },
+        "meta": {
+          "endpoint": "/api/util/hash",
+          "method": "GET",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:31.000Z",
+          "requestId": "c8b3e640"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.hash",
+        "type": "string",
+        "description": "Resumen en hexadecimal o Base64 según el parámetro encoding."
+      },
+      {
+        "name": "data.verified",
+        "type": "boolean",
+        "description": "null si no se pidió verificación; true/false si se envió verify."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el parámetro text."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_ENUM",
+        "message": "algorithm o encoding no son válidos."
+      }
+    ],
+    "tags": [
+      "utilidades",
+      "criptografía"
+    ]
+  },
+  {
+    "id": "util-color",
+    "name": "Color aleatorio",
+    "category": "utilidades",
+    "type": "own",
+    "path": "/api/util/color",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Genera un color aleatorio en HEX, RGB, HSL y también su versión legible para humanos.",
+    "description": "El color se genera con azar criptográfico dentro del espacio RGB completo. Se devuelven las cuatro notaciones para que puedas usarlo directamente en CSS, además del valor de luminancia para saber si conviene texto blanco o negro encima.",
+    "parameters": [
+      {
+        "name": "count",
+        "in": "query",
+        "type": "integer",
+        "required": false,
+        "example": "1",
+        "default": "1",
+        "description": "Cuántos colores generar (1 a 50)."
+      }
+    ],
+    "exampleRequest": "GET /api/util/color",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "count": 1,
+          "colors": [
+            {
+              "hex": "#3B82F6",
+              "rgb": {
+                "r": 59,
+                "g": 130,
+                "b": 246
+              },
+              "rgbString": "rgb(59, 130, 246)",
+              "hsl": {
+                "h": 217,
+                "s": 91,
+                "l": 60
+              },
+              "hslString": "hsl(217, 91%, 60%)",
+              "relativeLuminance": 0.2504,
+              "contrastTextColor": "white"
+            }
+          ]
+        },
+        "meta": {
+          "endpoint": "/api/util/color",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:32.000Z",
+          "requestId": "0f2a71dd"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.colors[].hex",
+        "type": "string",
+        "description": "Color en notación hexadecimal de 6 dígitos."
+      },
+      {
+        "name": "data.colors[].contrastTextColor",
+        "type": "string",
+        "description": "white o black, el que mejor contrasta sobre ese color."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_INTEGER",
+        "message": "count debe ser un entero entre 1 y 50."
+      }
+    ],
+    "tags": [
+      "utilidades",
+      "colores",
+      "css"
+    ]
+  },
+  {
+    "id": "util-echo",
+    "name": "Eco de la petición HTTP",
+    "category": "utilidades",
+    "type": "own",
+    "path": "/api/util/echo",
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE"
+    ],
+    "summary": "Devuelve exactamente lo que le enviaste: método, cabeceras, query, cuerpo y tu IP.",
+    "description": "Perfecto para depurar clientes HTTP, comprobar qué cabeceras envía tu navegador o verificar cómo se serializa un cuerpo. Acepta JSON, texto plano y formularios. Se filtran las cabeceras con posibles credenciales (authorization, cookie) antes de devolverlas.",
+    "parameters": [
+      {
+        "name": "cualquiera",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "?debug=1&hola=mundo",
+        "description": "Cualquier parámetro de consulta se devuelve tal cual en data.query."
+      },
+      {
+        "name": "includeHeaders",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "true",
+        "default": "true",
+        "description": "Con false omite las cabeceras de la respuesta."
+      }
+    ],
+    "exampleRequest": "POST /api/util/echo  { \"mensaje\": \"hola\" }",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "method": "POST",
+          "path": "/api/util/echo",
+          "query": {},
+          "body": {
+            "mensaje": "hola"
+          },
+          "bodyType": "application/json",
+          "contentType": "application/json",
+          "headers": {
+            "host": "localhost:3000",
+            "accept": "application/json",
+            "content-type": "application/json"
+          },
+          "client": {
+            "ip": "::1",
+            "userAgent": "curl/8.5.0"
+          },
+          "receivedAt": "2026-10-10T18:02:33.100Z"
+        },
+        "meta": {
+          "endpoint": "/api/util/echo",
+          "method": "POST",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:33.100Z",
+          "requestId": "a17bcef4"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.body",
+        "type": "any",
+        "description": "Cuerpo recibido tal cual (objeto si era JSON, texto si no)."
+      },
+      {
+        "name": "data.headers",
+        "type": "object",
+        "description": "Cabeceras recibidas, sin authorization ni cookie."
+      },
+      {
+        "name": "data.client.ip",
+        "type": "string",
+        "description": "IP desde la que se hizo la petición."
+      }
+    ],
+    "errors": [
+      {
+        "status": 413,
+        "code": "PAYLOAD_TOO_LARGE",
+        "message": "El cuerpo supera el tamaño máximo permitido."
+      }
+    ],
+    "tags": [
+      "depuración",
+      "http"
+    ]
+  },
+  {
+    "id": "util-validate-regex",
+    "name": "Validar expresión regular",
+    "category": "utilidades",
+    "type": "own",
+    "path": "/api/util/validate-regex",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Comprueba si una expresión regular de JavaScript es válida y, si quieres, pruébala contra un texto.",
+    "description": "Compila el patrón con el motor de expresiones regulares de JavaScript (el mismo que usan el navegador y /api/text/count con regex=true). No evalúa código ni ejecuta reemplazos: sólo indica si el patrón es válido y, cuando envías test, si encuentra coincidencia y en qué posición.",
+    "parameters": [
+      {
+        "name": "pattern",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "example": "^[a-z]+\\d{2}$",
+        "description": "Expresión regular a comprobar (1 a 200 caracteres)."
+      },
+      {
+        "name": "flags",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "gi",
+        "description": "Banderas permitidas: g, i, m, s, u e y (máximo 6)."
+      },
+      {
+        "name": "test",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "hola12",
+        "description": "Texto opcional contra el que probar el patrón."
+      }
+    ],
+    "exampleRequest": "GET /api/util/validate-regex?pattern=^[a-z]+\\d{2}$&test=hola12",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "pattern": "^[a-z]+\\d{2}$",
+          "flags": "",
+          "valid": true,
+          "source": "^[a-z]+\\d{2}$",
+          "global": false,
+          "matchesSample": {
+            "match": "hola12",
+            "index": 0,
+            "groups": []
+          },
+          "note": "Este endpoint sólo comprueba la sintaxis; no ejecuta reemplazos ni evalúa código."
+        },
+        "meta": {
+          "endpoint": "/api/util/validate-regex",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:33.500Z",
+          "requestId": "f0a1b2c3"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.valid",
+        "type": "boolean",
+        "description": "true si el patrón se puede compilar."
+      },
+      {
+        "name": "data.matchesSample",
+        "type": "object",
+        "description": "Coincidencia encontrada en el texto de prueba (null si no hay o si no se envió texto)."
+      },
+      {
+        "name": "data.reason",
+        "type": "string",
+        "description": "Sólo cuando valid=false: motivo indicado por el motor de expresiones regulares."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_FORMAT",
+        "message": "El patrón está vacío, supera los 200 caracteres o lleva banderas no permitidas."
+      }
+    ],
+    "tags": [
+      "utilidades",
+      "validación",
+      "regex"
+    ]
+  },
+  {
+    "id": "demo-list",
+    "name": "Listar tareas (CRUD de ejemplo)",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/tasks",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Lista las tareas del recurso de ejemplo, con búsqueda, orden y paginación.",
+    "description": "ATENCIÓN: los datos de este recurso se guardan en memoria y se reinician al reiniciar el servidor (no hay base de datos). Es un recurso didáctico para practicar un CRUD REST completo con GET, POST, PUT, PATCH y DELETE. Empieza con 4 tareas de ejemplo para que la primera respuesta nunca esté vacía.",
+    "parameters": [
+      {
+        "name": "search",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "documentación",
+        "description": "Filtra por texto en el título o la descripción."
+      },
+      {
+        "name": "completed",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "description": "Filtra por estado: true completadas, false pendientes."
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "createdAt",
+        "enum": [
+          "id",
+          "title",
+          "completed",
+          "createdAt"
+        ],
+        "default": "id",
+        "description": "Campo de ordenación."
+      },
+      {
+        "name": "order",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "asc",
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "default": "asc",
+        "description": "Dirección de la ordenación."
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "type": "integer",
+        "required": false,
+        "example": "1",
+        "default": "1",
+        "description": "Número de página (desde 1)."
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "type": "integer",
+        "required": false,
+        "example": "10",
+        "default": "10",
+        "description": "Elementos por página (1 a 50)."
+      }
+    ],
+    "exampleRequest": "GET /api/demo/tasks?limit=2&sort=id",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "items": [
+            {
+              "id": 1,
+              "title": "Probar el endpoint /api/health",
+              "description": "Verifica que el servidor responde.",
+              "completed": true,
+              "priority": "alta",
+              "createdAt": "2026-10-10T17:00:00.000Z",
+              "updatedAt": "2026-10-10T17:00:00.000Z"
+            },
+            {
+              "id": 2,
+              "title": "Explorar el catálogo de APIs",
+              "description": "Filtra por categoría y método.",
+              "completed": false,
+              "priority": "media",
+              "createdAt": "2026-10-10T17:00:00.000Z",
+              "updatedAt": "2026-10-10T17:00:00.000Z"
+            }
+          ],
+          "pagination": {
+            "total": 4,
+            "page": 1,
+            "limit": 2,
+            "totalPages": 2,
+            "hasNext": true,
+            "hasPrev": false
+          }
+        },
+        "meta": {
+          "endpoint": "/api/demo/tasks",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:34.000Z",
+          "requestId": "93f1c0b7"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.items",
+        "type": "array<object>",
+        "description": "Tareas que cumplen los filtros."
+      },
+      {
+        "name": "data.pagination",
+        "type": "object",
+        "description": "Total de elementos, página actual, páginas totales y si hay página siguiente o anterior."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_ENUM",
+        "message": "sort u order tienen un valor no permitido."
+      },
+      {
+        "status": 400,
+        "code": "INVALID_INTEGER",
+        "message": "page o limit no son enteros válidos."
+      }
+    ],
+    "tags": [
+      "crud",
+      "ejemplo",
+      "paginación"
+    ]
+  },
+  {
+    "id": "demo-create",
+    "name": "Crear tarea (CRUD de ejemplo)",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/tasks",
+    "methods": [
+      "POST"
+    ],
+    "summary": "Crea una tarea nueva con validación de título, prioridad y campos opcionales.",
+    "description": "Envía un JSON como {\"title\":\"Mi tarea\",\"priority\":\"alta\"}. También acepta formularios enviados como texto. Devuelve 201 con la tarea creada y la cabecera Location apuntando a su URL. Los datos viven en memoria del servidor.",
+    "parameters": [
+      {
+        "name": "title",
+        "in": "body",
+        "type": "string",
+        "required": true,
+        "example": "Mi nueva tarea",
+        "description": "Título de la tarea (2 a 200 caracteres)."
+      },
+      {
+        "name": "description",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "Descripción opcional",
+        "description": "Descripción (máximo 1000 caracteres)."
+      },
+      {
+        "name": "completed",
+        "in": "body",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "default": "false",
+        "description": "Estado inicial de la tarea."
+      },
+      {
+        "name": "priority",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "media",
+        "enum": [
+          "baja",
+          "media",
+          "alta"
+        ],
+        "default": "media",
+        "description": "Prioridad de la tarea."
+      },
+      {
+        "name": "tags",
+        "in": "body",
+        "type": "array<string>",
+        "required": false,
+        "example": "[\"api\",\"demo\"]",
+        "description": "Etiquetas de la tarea (máximo 10)."
+      }
+    ],
+    "exampleRequest": "POST /api/demo/tasks  { \"title\": \"Mi nueva tarea\", \"priority\": \"alta\" }",
+    "exampleResponse": {
+      "status": 201,
+      "body": {
+        "ok": true,
+        "data": {
+          "item": {
+            "id": 5,
+            "title": "Mi nueva tarea",
+            "description": "",
+            "completed": false,
+            "priority": "alta",
+            "tags": [],
+            "createdAt": "2026-10-10T18:02:35.000Z",
+            "updatedAt": "2026-10-10T18:02:35.000Z"
+          },
+          "location": "/api/demo/tasks/5",
+          "totalItems": 5
+        },
+        "meta": {
+          "endpoint": "/api/demo/tasks",
+          "method": "POST",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:35.000Z",
+          "requestId": "5b7e2f18"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.item",
+        "type": "object",
+        "description": "Tarea creada, con su id asignado y fechas."
+      },
+      {
+        "name": "data.location",
+        "type": "string",
+        "description": "Ruta para consultar la tarea recién creada."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el campo title."
+      },
+      {
+        "status": 422,
+        "code": "VALIDATION_ERROR",
+        "message": "Algún campo no cumple las reglas (se devuelve el detalle por campo)."
+      },
+      {
+        "status": 409,
+        "code": "LIMIT_REACHED",
+        "message": "Se alcanzó el máximo de 200 tareas en memoria."
+      }
+    ],
+    "tags": [
+      "crud",
+      "ejemplo",
+      "escritura"
+    ]
+  },
+  {
+    "id": "demo-get-one",
+    "name": "Obtener una tarea por id",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/tasks/:id",
+    "methods": [
+      "GET"
+    ],
+    "summary": "Devuelve una tarea concreta del recurso de ejemplo.",
+    "description": "Sustituye :id por el identificador de la tarea (por ejemplo /api/demo/tasks/1). Si no existe, responde 404 con un mensaje claro.",
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "type": "integer",
+        "required": true,
+        "example": "1",
+        "description": "Identificador de la tarea."
+      }
+    ],
+    "exampleRequest": "GET /api/demo/tasks/1",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "item": {
+            "id": 1,
+            "title": "Probar el endpoint /api/health",
+            "description": "Verifica que el servidor responde.",
+            "completed": true,
+            "priority": "alta",
+            "tags": [
+              "pruebas"
+            ],
+            "createdAt": "2026-10-10T17:00:00.000Z",
+            "updatedAt": "2026-10-10T17:00:00.000Z"
+          }
+        },
+        "meta": {
+          "endpoint": "/api/demo/tasks/1",
+          "method": "GET",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:36.000Z",
+          "requestId": "d0c4ab73"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.item",
+        "type": "object",
+        "description": "Tarea encontrada."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_FORMAT",
+        "message": "El id de la ruta no es un número entero positivo."
+      },
+      {
+        "status": 404,
+        "code": "ITEM_NOT_FOUND",
+        "message": "No existe ninguna tarea con ese id."
+      }
+    ],
+    "tags": [
+      "crud",
+      "ejemplo"
+    ]
+  },
+  {
+    "id": "demo-replace",
+    "name": "Reemplazar una tarea (PUT)",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/tasks/:id",
+    "methods": [
+      "PUT"
+    ],
+    "summary": "Reemplaza por completo una tarea existente; los campos que no envíes vuelven a su valor por defecto.",
+    "description": "PUT exige el campo title y sobrescribe el recurso entero. Si quieres cambiar sólo un campo, usa PATCH /api/demo/tasks/:id.",
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "type": "integer",
+        "required": true,
+        "example": "2",
+        "description": "Identificador de la tarea a reemplazar."
+      },
+      {
+        "name": "title",
+        "in": "body",
+        "type": "string",
+        "required": true,
+        "example": "Título reemplazado",
+        "description": "Nuevo título (2 a 200 caracteres)."
+      },
+      {
+        "name": "description",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "",
+        "description": "Nueva descripción."
+      },
+      {
+        "name": "completed",
+        "in": "body",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "description": "Nuevo estado."
+      },
+      {
+        "name": "priority",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "baja",
+        "enum": [
+          "baja",
+          "media",
+          "alta"
+        ],
+        "description": "Nueva prioridad."
+      }
+    ],
+    "exampleRequest": "PUT /api/demo/tasks/2  { \"title\": \"Título reemplazado\", \"completed\": true }",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "item": {
+            "id": 2,
+            "title": "Título reemplazado",
+            "description": "",
+            "completed": true,
+            "priority": "media",
+            "tags": [],
+            "createdAt": "2026-10-10T17:00:00.000Z",
+            "updatedAt": "2026-10-10T18:02:37.000Z"
+          },
+          "replaced": true
+        },
+        "meta": {
+          "endpoint": "/api/demo/tasks/2",
+          "method": "PUT",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:37.000Z",
+          "requestId": "4a9fe018"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.item",
+        "type": "object",
+        "description": "Recurso completo después del reemplazo."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_FORMAT",
+        "message": "El id de la ruta no es un número entero positivo."
+      },
+      {
+        "status": 400,
+        "code": "MISSING_PARAM",
+        "message": "Falta el campo title."
+      },
+      {
+        "status": 404,
+        "code": "ITEM_NOT_FOUND",
+        "message": "No existe ninguna tarea con ese id."
+      }
+    ],
+    "tags": [
+      "crud",
+      "ejemplo",
+      "escritura"
+    ]
+  },
+  {
+    "id": "demo-update",
+    "name": "Actualizar campos de una tarea (PATCH)",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/tasks/:id",
+    "methods": [
+      "PATCH"
+    ],
+    "summary": "Modifica sólo los campos que envíes y conserva el resto.",
+    "description": "Envía únicamente lo que quieras cambiar, por ejemplo {\"completed\":true}. Si no envías ningún campo reconocido, la API responde 422 indicándote cuáles admite.",
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "type": "integer",
+        "required": true,
+        "example": "3",
+        "description": "Identificador de la tarea a modificar."
+      },
+      {
+        "name": "title",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "Título actualizado",
+        "description": "Nuevo título."
+      },
+      {
+        "name": "completed",
+        "in": "body",
+        "type": "boolean",
+        "required": false,
+        "example": "true",
+        "description": "Nuevo estado de completado."
+      },
+      {
+        "name": "priority",
+        "in": "body",
+        "type": "string",
+        "required": false,
+        "example": "alta",
+        "enum": [
+          "baja",
+          "media",
+          "alta"
+        ],
+        "description": "Nueva prioridad."
+      }
+    ],
+    "exampleRequest": "PATCH /api/demo/tasks/3  { \"completed\": true }",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "item": {
+            "id": 3,
+            "title": "Documentar los endpoints",
+            "description": "Añadir ejemplos de uso.",
+            "completed": true,
+            "priority": "media",
+            "tags": [
+              "docs"
+            ],
+            "createdAt": "2026-10-10T17:00:00.000Z",
+            "updatedAt": "2026-10-10T18:02:38.000Z"
+          },
+          "updatedFields": [
+            "completed"
+          ]
+        },
+        "meta": {
+          "endpoint": "/api/demo/tasks/3",
+          "method": "PATCH",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:38.000Z",
+          "requestId": "e73b1c60"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.updatedFields",
+        "type": "array<string>",
+        "description": "Campos que realmente se han modificado."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_FORMAT",
+        "message": "El id de la ruta no es un número entero positivo."
+      },
+      {
+        "status": 404,
+        "code": "ITEM_NOT_FOUND",
+        "message": "No existe ninguna tarea con ese id."
+      },
+      {
+        "status": 422,
+        "code": "NO_FIELDS",
+        "message": "No se envió ningún campo actualizable."
+      }
+    ],
+    "tags": [
+      "crud",
+      "ejemplo",
+      "escritura"
+    ]
+  },
+  {
+    "id": "demo-delete",
+    "name": "Eliminar una tarea (DELETE)",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/tasks/:id",
+    "methods": [
+      "DELETE"
+    ],
+    "summary": "Borra una tarea del recurso de ejemplo y confirma qué se eliminó.",
+    "description": "Devuelve 200 con el recurso eliminado para que puedas confirmar la operación. Si el id no existe responde 404. Recuerda que los datos se reinician al reiniciar el servidor.",
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "type": "integer",
+        "required": true,
+        "example": "4",
+        "description": "Identificador de la tarea a eliminar."
+      }
+    ],
+    "exampleRequest": "DELETE /api/demo/tasks/4",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "deleted": true,
+          "item": {
+            "id": 4,
+            "title": "Publicar el proyecto",
+            "description": "README y despliegue.",
+            "completed": false,
+            "priority": "alta",
+            "tags": [
+              "release"
+            ],
+            "createdAt": "2026-10-10T17:00:00.000Z",
+            "updatedAt": "2026-10-10T17:00:00.000Z"
+          },
+          "totalItems": 3
+        },
+        "meta": {
+          "endpoint": "/api/demo/tasks/4",
+          "method": "DELETE",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:39.000Z",
+          "requestId": "b8188a2f"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.deleted",
+        "type": "boolean",
+        "description": "true si la tarea existía y se eliminó."
+      },
+      {
+        "name": "data.totalItems",
+        "type": "integer",
+        "description": "Tareas que quedan en memoria."
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "code": "INVALID_FORMAT",
+        "message": "El id de la ruta no es un número entero positivo."
+      },
+      {
+        "status": 404,
+        "code": "ITEM_NOT_FOUND",
+        "message": "No existe ninguna tarea con ese id."
+      }
+    ],
+    "tags": [
+      "crud",
+      "ejemplo",
+      "escritura"
+    ]
+  },
+  {
+    "id": "demo-reset",
+    "name": "Reiniciar el CRUD de ejemplo",
+    "category": "demo",
+    "type": "demo",
+    "path": "/api/demo/reset",
+    "methods": [
+      "POST"
+    ],
+    "summary": "Borra los cambios que hayas hecho y restaura las 4 tareas de ejemplo originales.",
+    "description": "Útil para dejar la demo en un estado conocido después de tus pruebas. Sólo afecta al recurso en memoria /api/demo/tasks; no toca ningún otro endpoint.",
+    "parameters": [],
+    "exampleRequest": "POST /api/demo/reset",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "reset": true,
+          "items": 4,
+          "message": "Recurso de ejemplo restaurado a su estado inicial."
+        },
+        "meta": {
+          "endpoint": "/api/demo/reset",
+          "method": "POST",
+          "durationMs": 0,
+          "timestamp": "2026-10-10T18:02:40.000Z",
+          "requestId": "1c9d44e2"
+        }
+      }
+    },
+    "responseFields": [
+      {
+        "name": "data.items",
+        "type": "integer",
+        "description": "Número de tareas restauradas."
+      }
+    ],
+    "errors": [],
+    "tags": [
+      "crud",
+      "ejemplo",
+      "mantenimiento"
+    ]
+  }
+]

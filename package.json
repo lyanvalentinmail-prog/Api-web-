@@ -1,37 +1,30 @@
 {
-  "name": "api-web-es",
-  "version": "3.0.0",
-  "description": "REST API pública en español, sin clave: IA, anime, descargas, juegos, tarjetas Canvas, generadores Brat/IQC y más, con Playground interactivo.",
+  "name": "freeapi-hub",
+  "version": "1.0.0",
+  "description": "Plataforma gratuita de APIs públicas: catálogo, probador de endpoints, documentación y estado. Sin registro, sin login y sin API keys.",
   "main": "server.js",
+  "type": "commonjs",
   "engines": {
-    "node": ">=18.x"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test": "node scripts/smoke.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lyanvalentinmail-prog/Api-web-.git"
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "check": "node --check server.js && node -e \"require('./src/app')\"",
+    "test:frontend": "node dev/frontend-check.mjs",
+    "start:env": "node --env-file=.env server.js"
   },
   "keywords": [
-    "rest-api",
-    "api-playground",
-    "brat-generator",
-    "iqc",
-    "express"
+    "api",
+    "public-api",
+    "free-api",
+    "express",
+    "json",
+    "developer-tools"
   ],
-  "author": "Lyan Valentin",
   "license": "MIT",
   "dependencies": {
-    "@fontsource/cinzel": "^5.3.0",
-    "@fontsource/cormorant-garamond": "^5.3.0",
-    "@resvg/resvg-js": "^2.6.2",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "jpeg-js": "^0.4.4",
-    "qrcode": "^1.5.4",
-    "webp-wasm": "^1.0.6"
+    "express": "^4.21.2"
   }
 }

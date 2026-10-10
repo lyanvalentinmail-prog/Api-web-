@@ -1,118 +1,454 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Console — REST API pública sin clave</title>
-  <meta name="description" content="API pública sin registro: generadores Brat e IQC, tarjetas Canvas y utilidades, con Playground interactivo." />
-  <meta property="og:title" content="API Console" />
-  <meta property="og:description" content="REST API pública sin clave. Brat, IQC, tarjetas y utilidades, con Playground interactivo." />
-  <meta property="og:image" content="/assets/ui/og.jpg" />
-  <meta property="og:type" content="website" />
-  <link rel="icon" type="image/svg+xml" href="/assets/ui/favicon.svg" />
-  <link rel="stylesheet" href="/css/styles.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FreeAPI Hub — APIs públicas gratis, sin registro ni API key</title>
+<meta name="description" content="Catálogo de APIs públicas gratuitas con probador de endpoints, documentación, ejemplos de código y estado real. Sin registro, sin login y sin API key.">
+<meta name="theme-color" content="#0b0b16">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%236d28d9'/%3E%3Cpath d='M30 66V34h12c8 0 13 4 13 11s-5 11-13 11h-4v10h-8z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <header class="navbar">
-    <div class="container navbar-inner">
-      <a href="/" class="brand">
-        <img src="/assets/ui/logo.svg" alt="" />
-        <span>API Console</span>
-        <small>v3</small>
-      </a>
-      <nav class="nav-links">
-        <a href="/" class="nav-link active">Inicio</a>
-        <a href="/playground" class="nav-link">Playground</a>
-        <a href="/api/endpoints" class="nav-link">Catálogo JSON</a>
-      </nav>
-    </div>
-  </header>
+<a class="skip-link" href="#catalogo">Saltar al catálogo</a>
 
-  <main class="container">
-    <section class="hero">
-      <h1>API pública, sin clave.<br /><span class="accent">Pide, ejecuta y listo.</span></h1>
-      <p class="lede">
-        Generadores de imágenes (Brat e iPhone&nbsp;Quoted&nbsp;Chat), tarjetas Canvas y utilidades.
-        Sin registro ni tokens: cada endpoint hace lo que promete.
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">FH</span>
+      <span class="brand-text">
+        <strong>FreeAPI Hub</strong>
+        <small id="brandVersion">Cargando…</small>
+      </span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mainNav">
+      <span class="sr-only">Abrir menú de navegación</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+
+    <nav class="main-nav" id="mainNav" aria-label="Secciones">
+      <a href="#catalogo">Catálogo</a>
+      <a href="#probador">Probador</a>
+      <a href="#documentacion">Documentación</a>
+      <a href="#estado">Estado</a>
+      <a href="#ejemplos">Ejemplos</a>
+      <a class="nav-cta" href="/api/catalog" target="_blank" rel="noopener">API JSON</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Sin registro · Sin login · Sin API key</p>
+        <h1>APIs públicas gratis para <span class="gradient-text">probar, usar y desplegar</span></h1>
+        <p class="lead">
+          FreeAPI Hub reúne <strong>endpoints propios que funcionan de verdad</strong> (aleatorios, texto, JSON, matemáticas,
+          tiempo, utilidades y un CRUD de ejemplo) junto a un proxy documentado de <strong>APIs públicas de terceros</strong> que
+          no piden clave. Todo desde el navegador, sin crear cuenta.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#probador">Probar un endpoint</a>
+          <a class="btn btn-ghost" href="#catalogo">Ver el catálogo</a>
+          <a class="btn btn-ghost" href="/api/status">Comprobar estado</a>
+        </div>
+        <ul class="hero-badges" id="heroBadges">
+          <li class="badge badge-live"><span class="dot"></span> Comprobando servidor…</li>
+        </ul>
+      </div>
+
+      <aside class="hero-panel" aria-label="Resumen del servicio">
+        <div class="panel-head">
+          <h2>Resumen en directo</h2>
+          <span class="panel-hint">Datos reales de /api/info</span>
+        </div>
+        <dl class="stat-grid" id="statGrid">
+          <div><dt>Endpoints propios</dt><dd data-stat="ownEndpoints">—</dd></div>
+          <div><dt>APIs externas</dt><dd data-stat="externalEndpoints">—</dd></div>
+          <div><dt>Categorías</dt><dd data-stat="categories">—</dd></div>
+          <div><dt>Proveedores externos</dt><dd data-stat="externalProviders">—</dd></div>
+        </dl>
+        <div class="panel-foot">
+          <p class="mini-note">
+            Autenticación: <strong id="authState">comprobando…</strong>. Los endpoints propios se ejecutan en este servidor;
+            los externos dependen de cada proveedor y se muestran en <a href="#estado">Estado</a>.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- CATÁLOGO -->
+  <section class="section" id="catalogo">
+    <div class="wrap">
+      <header class="section-head">
+        <div>
+          <h2>Catálogo de APIs</h2>
+          <p class="section-sub">
+            Filtra por nombre, categoría, tipo o método HTTP. Cada tarjeta indica el método, los parámetros y si el endpoint
+            es propio, de demostración o de un proveedor externo.
+          </p>
+        </div>
+        <div class="section-tools">
+          <span class="pill" id="catalogCount">Cargando…</span>
+          <button class="btn btn-ghost btn-sm" id="reloadCatalog" type="button">Recargar</button>
+        </div>
+      </header>
+
+      <div class="filters">
+        <label class="field field-search">
+          <span>Buscar</span>
+          <input type="search" id="searchInput" placeholder="reverse, uuid, clima, hash…" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Tipo</span>
+          <select id="typeFilter">
+            <option value="">Todos</option>
+            <option value="own">Propios (este servidor)</option>
+            <option value="demo">CRUD de ejemplo</option>
+            <option value="external">Externos (terceros)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Método</span>
+          <select id="methodFilter">
+            <option value="">Todos</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="chips" id="categoryChips" role="group" aria-label="Filtrar por categoría"></div>
+      <p class="empty-note" id="categoryDescription" hidden></p>
+
+      <div class="card-grid" id="endpointGrid" aria-live="polite">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+      <p class="empty" id="emptyState" hidden>No hay endpoints que coincidan con esos filtros.</p>
+    </div>
+  </section>
+
+  <!-- PROBADOR -->
+  <section class="section section-alt" id="probador">
+    <div class="wrap">
+      <header class="section-head">
+        <div>
+          <h2>Probador de endpoints</h2>
+          <p class="section-sub">
+            Elige un endpoint, rellena los parámetros y envía la petición desde tu navegador. Verás el código HTTP, el tiempo,
+            los encabezados y el cuerpo de la respuesta real.
+          </p>
+        </div>
+        <div class="section-tools">
+          <span class="pill" id="testerBase">—</span>
+        </div>
+      </header>
+
+      <div class="tester">
+        <form class="tester-form" id="testerForm" autocomplete="off">
+          <label class="field">
+            <span>Endpoint</span>
+            <select id="endpointSelect"></select>
+          </label>
+
+          <div class="field">
+            <span>Método HTTP</span>
+            <div class="method-chips" id="methodChips"></div>
+            <p class="hint" id="methodHint">Se muestran sólo los métodos admitidos por el endpoint elegido.</p>
+          </div>
+
+          <div class="field">
+            <span>URL final</span>
+            <div class="url-preview" id="urlPreview">—</div>
+          </div>
+
+          <div class="params" id="paramsContainer"></div>
+
+          <label class="checkbox" id="customBodyWrap" hidden>
+            <input type="checkbox" id="customBodyToggle">
+            <span>Editar el cuerpo JSON a mano</span>
+          </label>
+
+          <div class="field" id="bodyField" hidden>
+            <span>Cuerpo de la petición (JSON)</span>
+            <textarea id="bodyInput" rows="6" spellcheck="false"></textarea>
+          </div>
+
+          <div class="tester-actions">
+            <button class="btn btn-primary" type="submit" id="sendButton">
+              Enviar solicitud
+            </button>
+            <button class="btn btn-ghost" type="button" id="resetParams">Limpiar</button>
+            <button class="btn btn-ghost" type="button" id="copyUrl">Copiar URL</button>
+            <span class="spinner" id="sendSpinner" hidden aria-hidden="true"></span>
+          </div>
+
+          <p class="hint" id="testerLimits"></p>
+        </form>
+
+        <div class="tester-response">
+          <div class="panel-head">
+            <h3>Respuesta</h3>
+            <div class="response-meta" id="responseMeta">
+              <span class="meta-chip" id="statusChip" hidden></span>
+              <span class="meta-chip" id="timeChip" hidden></span>
+              <span class="meta-chip" id="sizeChip" hidden></span>
+            </div>
+          </div>
+
+          <div class="tabs" id="responseTabs" role="tablist">
+            <button role="tab" class="tab is-active" data-tab="body" aria-selected="true">Cuerpo</button>
+            <button role="tab" class="tab" data-tab="headers" aria-selected="false">Encabezados</button>
+            <button role="tab" class="tab" data-tab="code" aria-selected="false">Ejemplos de código</button>
+          </div>
+
+          <div class="tab-panels">
+            <div class="tab-panel is-active" data-panel="body">
+              <div class="response-toolbar">
+                <button class="btn btn-ghost btn-sm" type="button" id="copyResponse">Copiar respuesta</button>
+                <button class="btn btn-ghost btn-sm" type="button" id="downloadResponse">Descargar .json</button>
+              </div>
+              <div id="imagePreview" class="image-preview" hidden></div>
+              <pre class="code-block json-view" id="responseBody" tabindex="0">Envía una petición para ver aquí la respuesta real del servidor.</pre>
+            </div>
+
+            <div class="tab-panel" data-panel="headers">
+              <div class="response-toolbar">
+                <button class="btn btn-ghost btn-sm" type="button" id="copyHeaders">Copiar encabezados</button>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="headersTable">
+                  <thead><tr><th>Encabezado</th><th>Valor</th></tr></thead>
+                  <tbody><tr><td colspan="2" class="muted">Sin datos todavía.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tab-panel" data-panel="code">
+              <div class="code-tabs" id="codeTabs">
+                <button class="code-tab is-active" data-lang="javascript" type="button">JavaScript (fetch)</button>
+                <button class="code-tab" data-lang="python" type="button">Python (requests)</button>
+                <button class="code-tab" data-lang="curl" type="button">cURL</button>
+                <button class="code-tab" data-lang="node" type="button">Node.js</button>
+              </div>
+              <div class="response-toolbar">
+                <button class="btn btn-ghost btn-sm" type="button" id="copyCode">Copiar código</button>
+              </div>
+              <pre class="code-block" id="codeOutput" tabindex="0"></pre>
+            </div>
+          </div>
+
+          <div class="history">
+            <div class="panel-head">
+              <h4>Historial de la sesión</h4>
+              <button class="btn btn-ghost btn-sm" type="button" id="clearHistory">Vaciar</button>
+            </div>
+            <ul class="history-list" id="historyList">
+              <li class="muted">Todavía no has enviado peticiones.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTACIÓN -->
+  <section class="section" id="documentacion">
+    <div class="wrap">
+      <header class="section-head">
+        <div>
+          <h2>Documentación del endpoint</h2>
+          <p class="section-sub">
+            Descripción, parámetros, ejemplos de uso en cuatro lenguajes, respuesta esperada y errores posibles del endpoint
+            seleccionado en el probador.
+          </p>
+        </div>
+        <div class="section-tools">
+          <label class="field field-inline">
+            <span>Endpoint</span>
+            <select id="docsSelect" aria-label="Elegir endpoint para la documentación"></select>
+          </label>
+        </div>
+      </header>
+
+      <div id="docsContent" class="docs">
+        <p class="muted">Elige un endpoint para ver su documentación completa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ESTADO -->
+  <section class="section section-alt" id="estado">
+    <div class="wrap">
+      <header class="section-head">
+        <div>
+          <h2>Estado de los servicios</h2>
+          <p class="section-sub">
+            Comprobaciones reales: el servidor ejecuta pruebas funcionales contra su propia API y consultas de verdad a cada
+            proveedor externo, midiendo el tiempo de respuesta. No se simula nada.
+          </p>
+        </div>
+        <div class="section-tools">
+          <span class="pill" id="statusGenerated">Sin comprobar</span>
+          <label class="checkbox">
+            <input type="checkbox" id="statusRefresh">
+            <span>Forzar comprobación</span>
+          </label>
+          <button class="btn btn-primary btn-sm" type="button" id="checkStatus">Comprobar ahora</button>
+        </div>
+      </header>
+
+      <div id="statusNotice" class="callout" hidden></div>
+
+      <div class="status-summary" id="statusSummary"></div>
+
+      <div class="status-layout">
+        <article class="panel">
+          <div class="panel-head">
+            <h3>API propia (este servidor)</h3>
+            <span class="pill" id="ownStatusPill">—</span>
+          </div>
+          <p class="mini-note">
+            Pruebas funcionales ejecutadas de verdad contra la propia API a través de la interfaz de red interna
+            (127.0.0.1): suma, inversión de texto, validación de JSON, hash, CRUD completo y comprobación de errores.
+          </p>
+          <ul class="status-list" id="selfTestList"></ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h3>Proveedores externos</h3>
+            <span class="pill" id="externalStatusPill">—</span>
+          </div>
+          <p class="mini-note">
+            APIs públicas de terceros sin clave. Cada fila muestra el host consultado, el tiempo de respuesta y los límites
+            publicados por el proveedor. Si un proveedor está caído, tus endpoints propios siguen funcionando.
+          </p>
+          <ul class="status-list" id="externalList"></ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- EJEMPLOS -->
+  <section class="section" id="ejemplos">
+    <div class="wrap">
+      <header class="section-head">
+        <div>
+          <h2>Ejemplos rápidos</h2>
+          <p class="section-sub">
+            Copia el comando o pégalo en tu terminal. Sustituye la dirección por la de tu propio despliegue cuando lo tengas.
+          </p>
+        </div>
+        <div class="section-tools">
+          <span class="pill" id="examplesBase">—</span>
+        </div>
+      </header>
+
+      <div class="examples-grid" id="examplesGrid"></div>
+
+      <div class="panel panel-wide">
+        <div class="panel-head">
+          <h3>Cómo funciona este proyecto</h3>
+          <span class="panel-hint">Transparencia</span>
+        </div>
+        <div class="columns">
+          <div>
+            <h4>Endpoints propios</h4>
+            <p class="mini-note">
+              Se ejecutan en este servidor Node.js con Express: no dependen de terceros, no necesitan clave y responden aunque
+              no haya Internet. Código y definiciones incluidos en el repositorio.
+            </p>
+            <h4>Endpoints externos</h4>
+            <p class="mini-note">
+              Son un proxy de <strong>solo lectura</strong> hacia APIs públicas que no piden clave. La URL se construye en el
+              servidor a partir de una lista fija de proveedores y de parámetros validados (no se puede usar como proxy
+              abierto). Cada proveedor tiene sus propios límites, indicados en su documentación dentro de la web.
+            </p>
+          </div>
+          <div>
+            <h4>Límites de uso</h4>
+            <ul class="mini-list" id="rateLimitList">
+              <li>Cargando límites…</li>
+            </ul>
+            <h4>Sin cuentas ni claves</h4>
+            <p class="mini-note">
+              No hay registro, login, correo ni API key. Tampoco se usan cookies ni se pide ningún dato personal: el
+              limitador de peticiones sólo cuenta peticiones por IP y la usa exclusivamente para evitar abusos.
+            </p>
+          </div>
+        </div>
+
+        <h4>Cómo se comporta según dónde lo despliegues</h4>
+        <div class="table-wrap">
+          <table class="data-table" id="deployTable">
+            <thead>
+              <tr><th>Plataforma</th><th>Modelo de ejecución</th><th>Qué cambia</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Local, Docker, Render, Railway, Fly.io o VPS</strong></td>
+                <td>Servidor Node permanente (<code>server.js</code>)</td>
+                <td>
+                  Todos los endpoints propios y los externos funcionan igual que aquí. La caché (45 s de estado, cachés de
+                  proveedores) y el limitador de peticiones son por proceso y se mantienen entre peticiones.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Vercel</strong> (u otro entorno serverless)</td>
+                <td>Función por petición, sin proceso permanente</td>
+                <td>
+                  El CRUD de ejemplo se guarda en memoria de la instancia: puede reiniciarse o alternar entre instancias, así
+                  que trátalo como datos volátiles. Las cachés duran lo que vive la instancia, por lo que se hacen más
+                  consultas reales a los proveedores externos (conviene no abusar de <code>/api/status</code>). Los contadores
+                  <code>X-RateLimit-*</code> son orientativos. Todo lo demás se comporta igual.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mini-note">
+          Instrucciones concretas para cada plataforma en el README (sección «Despliegue»). Este proyecto
+          <strong>no está publicado en ninguna URL</strong>: si lo estás viendo en local, se ejecuta sólo en este equipo.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <strong>FreeAPI Hub</strong>
+      <p class="mini-note">
+        Proyecto de código abierto (licencia MIT). Si ejecutas este servidor en local, no está publicado en Internet: la web
+        que ves es la copia local. Para desplegarlo, sigue las instrucciones del README.
       </p>
-      <div class="hero-actions">
-        <a href="/playground" class="btn btn-primary">Abrir Playground</a>
-        <a href="/api/endpoints" class="btn btn-outline">GET /api/endpoints</a>
-      </div>
-
-      <div class="stats-row" id="stats-row">
-        <div class="stat"><div class="num" id="stat-endpoints">—</div><div class="lbl">endpoints activos</div></div>
-        <div class="stat"><div class="num" id="stat-categories">—</div><div class="lbl">categorías</div></div>
-        <div class="stat"><div class="num" id="stat-requests">0</div><div class="lbl">peticiones servidas</div></div>
-      </div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Generadores en vivo</h2>
-      <p class="section-sub">Estas imágenes se renderizan ahora mismo con su endpoint: son <code>&lt;img&gt;</code> contra la API, no capturas.</p>
-      <div class="gallery">
-        <figure>
-          <div class="thumb"><img src="/api/maker/brat?text=brat%20summer&blur=3" alt="Portada brat" /></div>
-          <figcaption>/api/maker/brat?text=brat summer</figcaption>
-        </figure>
-        <figure>
-          <div class="thumb"><img src="/api/maker/iqc?name=Lyan&text=Listo,%20el%20PR%20ya%20est%C3%A1%20mergeado%20%F0%9F%9A%80&replyTo=Mam%C3%A1&replyText=%C2%BFTerminaste%20el%20proyecto?&tapback=heart&scale=1" alt="Captura iMessage IQC" style="max-height:290px" /></div>
-          <figcaption>/api/maker/iqc</figcaption>
-        </figure>
-        <figure>
-          <div class="thumb"><img src="/api/canvas/quote-card?quote=Hazlo%20simple,%20pero%20significativo.&author=An%C3%B3nimo&theme=light" alt="Tarjeta de cita" /></div>
-          <figcaption>/api/canvas/quote-card</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Canvas «Sakura Night»</h2>
-      <p class="section-sub">Seis plantillas nocturnas; avatar, textos y colores van por query string. Tres ejemplos abajo, el resto en el <a href="/playground">Playground</a>.</p>
-      <div class="gallery">
-        <figure>
-          <div class="thumb"><img src="/api/canvas/sakura/welcome?username=Lyan%20Valentin&avatar=marco&member=1&width=800" alt="Canvas Sakura welcome" loading="lazy" /></div>
-          <figcaption>/api/canvas/sakura/welcome?username=Lyan Valentin&amp;avatar=marco&amp;member=1</figcaption>
-        </figure>
-        <figure>
-          <div class="thumb"><img src="/api/canvas/sakura/levelup-v2?username=Lyan&level=2&tint=%23ffb7c5&color=%23ffe4ec&width=800" alt="Canvas Sakura level up v2" loading="lazy" /></div>
-          <figcaption>/api/canvas/sakura/levelup-v2?username=Lyan&amp;level=2&amp;tint=#ffb7c5</figcaption>
-        </figure>
-        <figure>
-          <div class="thumb"><img src="/api/canvas/sakura/ship?name1=Tu%20perfil&name2=Su%20perfil&avatar1=ana&avatar2=marco&width=800" alt="Canvas Sakura ship" loading="lazy" /></div>
-          <figcaption>/api/canvas/sakura/ship?name1=Tu perfil&amp;name2=Su perfil&amp;avatar1=ana&amp;avatar2=marco</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Categorías</h2>
-      <p class="section-sub">Catálogo real, auto-descubierto desde <code>src/routes/</code>.</p>
-      <div class="cat-grid" id="cat-grid">
-        <p class="section-sub">Cargando catálogo…</p>
-      </div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Uso en 30 segundos</h2>
-      <p class="section-sub">Cualquier endpoint funciona con <code>fetch</code>, <code>cURL</code> o una etiqueta <code>&lt;img&gt;</code>.</p>
-      <pre class="code-block"><span class="c"># cURL</span>
-curl "https://TU-DOMINIO/api/maker/brat?text=hola%20mundo"
-
-<span class="c"># JavaScript</span>
-const img = document.createElement('img');
-img.src = '/api/maker/iqc?text=Hola%20desde%20un%20bot&avatar=ana';
-document.body.appendChild(img);</pre>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div><strong>API Console</strong> — Node.js + Express, sin clave.</div>
-      <div><a href="/playground">Playground</a> · <a href="/api/stats">Status</a></div>
     </div>
-  </footer>
+    <nav class="footer-links" aria-label="Enlaces de la API">
+      <a href="/api/catalog">Catálogo JSON</a>
+      <a href="/api/status">Estado</a>
+      <a href="/api/openapi.json">OpenAPI 3</a>
+      <a href="/api/info">Info</a>
+      <a href="/api.txt">Resumen en texto</a>
+    </nav>
+  </div>
+</footer>
 
-  <script src="/js/landing.js"></script>
+<div class="toast-zone" id="toastZone" aria-live="polite" aria-atomic="true"></div>
+
+<script src="/js/utils.js"></script>
+<script src="/js/examples.js"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>
