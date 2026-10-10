@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let selected = null;
   let snippetLang = 'url';
   let lastResponseText = '';
+  let lastContentType = '';
+  let lastHeadersText = '';
 
   const $ = id => document.getElementById(id);
   const listEl = $('endpoint-list');
@@ -95,23 +97,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function openModal(ep) {
     selected = ep;
     snippetLang = 'url';
+    const isImage = ep.responseType === 'image';
     $('modal-method').textContent = ep.method;
     $('modal-path').textContent = ep.path;
     $('modal-description').textContent = ep.description || '';
     buildForm(ep);
+    lastContentType = '';   // no arrastrar la extensión del endpoint anterior
+    lastResponseText = '';
     updateSnippets();
+
+    // PREVIEW: se limpia por completo al cambiar de endpoint.
+    resetPreview(isImage ? 'Generando vista previa…' : 'Este endpoint responde JSON. Abajo verás la respuesta.');
     $('response-viewer').innerHTML = '<div class="placeholder">Ejecuta el endpoint para ver la respuesta.</div>';
     $('resp-status').textContent = 'status: —';
+    $('resp-status').classList.remove('bad');
     $('resp-time').textContent = '— ms';
-    $('resp-type').textContent = ep.responseType === 'image' ? 'image' : 'json';
+    $('resp-type').textContent = isImage ? 'image' : 'json';
+    renderRequestHeaders(ep);
+    renderResponseHeaders(null);
+
     const live = $('live-toggle');
     if (live) {
-      live.closest('.live-field').style.display = ep.responseType === 'image' ? '' : 'none';
-      live.checked = ep.responseType === 'image';
+      $('live-field').style.display = isImage ? '' : 'none';
+      live.checked = isImage;
     }
     $('exec-modal').classList.add('open');
     // Las imágenes se previsualizan al instante; el resto se ejecuta a mano.
-    if (ep.responseType === 'image') execute({ quiet: true });
+    if (isImage) execute({ quiet: true });
   }
 
   function closeModal() { $('exec-modal').classList.remove('open'); }
@@ -225,22 +237,50 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------- snippets ---------- */
+  /** Escapa una URL para meterla dentro de comillas dobles de un comando shell. */
+  function shellQuote(url) {
+    return `"${url.replace(/(["\\$`])/g, '\\$1')}"`;
+  }
+
+  /** Extensión de archivo según el content-type de la respuesta. */
+  function extFromType(type) {
+    const t = String(type || '').split(';')[0].trim().toLowerCase();
+    if (t.includes('svg')) return 'svg';
+    if (t.includes('jpeg') || t.includes('jpg')) return 'jpg';
+    if (t.includes('png')) return 'png';
+    if (t.includes('webp')) return 'webp';
+    if (t.includes('gif')) return 'gif';
+    return 'img'; // todavía sin respuesta: extensión genérica
+  }
+
   function updateSnippets() {
     if (!selected) return;
     const url = buildUrl();
     const abs = location.origin + url;
+    const isImage = selected.responseType === 'image';
     $('open-raw').href = url;
     $('snippet-tabs').querySelectorAll('.snippet-tab').forEach(t => t.classList.toggle('active', t.dataset.lang === snippetLang));
+
     const snippets = {
       url: abs,
-      curl: `curl "${abs}"`,
-      js: selected.responseType === 'image'
-        ? `// imagen directa: úsala en un <img> o descárgala como Blob\nimg.src = "${abs}";\n\nconst blob = await (await fetch("${abs}")).blob();`
-        : `const res = await fetch("${abs}");\nconst data = await res.json();\nconsole.log(data);`,
-      python: selected.responseType === 'image'
-        ? `import requests\n\nr = requests.get("${abs}")\next = r.headers["content-type"].split("/")[-1].replace("svg+xml", "svg").replace("jpeg", "jpg")\nopen(f"out.{ext}", "wb").write(r.content)`
-        : `import requests\n\nr = requests.get("${abs}")\nprint(r.json())`
+
+      curl: isImage
+        ? `# guarda la imagen en un archivo (curl deduce la extensión con -OJ si el server la manda)\ncurl -L ${shellQuote(abs)} -o salida.${extFromType(lastContentType)}\n\n# o solo inspecciona las cabeceras\ncurl -I ${shellQuote(abs)}`
+        : `# respuesta JSON formateada (requiere jq)\ncurl -s ${shellQuote(abs)} | jq .\n\n# sin jq\ncurl -s ${shellQuote(abs)}`,
+
+      node: isImage
+        ? `// Node.js 18+ (fetch y Buffer son globales)\nimport { writeFile } from "node:fs/promises";\n\nconst res = await fetch(${JSON.stringify(abs)});\nif (!res.ok) throw new Error(\`HTTP \${res.status}\`);\n\nconst buf = Buffer.from(await res.arrayBuffer());\nawait writeFile("salida.${extFromType(lastContentType)}", buf);\nconsole.log("bytes:", buf.length);`
+        : `// Node.js 18+ (fetch es global)\nconst res = await fetch(${JSON.stringify(abs)});\nif (!res.ok) throw new Error(\`HTTP \${res.status}\`);\n\nconst data = await res.json();\nconsole.log(data);`,
+
+      js: isImage
+        ? `// en el navegador: úsala directo en un <img>…\nimg.src = ${JSON.stringify(abs)};\n\n// …o tráela como Blob para descargarla / subirla\nconst res = await fetch(${JSON.stringify(abs)});\nconst blob = await res.blob();\nconst objectUrl = URL.createObjectURL(blob);\n// recuerda liberarla: URL.revokeObjectURL(objectUrl)`
+        : `const res = await fetch(${JSON.stringify(abs)});\nconst data = await res.json();\nconsole.log(data);`,
+
+      python: isImage
+        ? `import requests\n\nr = requests.get(${JSON.stringify(abs)})\nr.raise_for_status()\next = r.headers["content-type"].split("/")[-1].replace("svg+xml", "svg").replace("jpeg", "jpg")\nopen(f"salida.{ext}", "wb").write(r.content)`
+        : `import requests\n\nr = requests.get(${JSON.stringify(abs)})\nr.raise_for_status()\nprint(r.json())`
     };
+
     $('snippet-box').textContent = snippets[snippetLang];
   }
 
@@ -252,12 +292,96 @@ document.addEventListener('DOMContentLoaded', () => {
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); } catch { /* portapapeles no disponible */ }
   }
-  $('copy-snippet').addEventListener('click', () => copy($('snippet-box').textContent));
-  $('copy-response').addEventListener('click', () => copy(lastResponseText));
+  function flash(btn, label = 'copiado') {
+    if (!btn) return;
+    const old = btn.textContent;
+    btn.textContent = label;
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  }
+  $('copy-snippet').addEventListener('click', e => { copy($('snippet-box').textContent); flash(e.currentTarget); });
+  $('copy-response').addEventListener('click', e => { copy(lastResponseText); flash(e.currentTarget); });
+  $('copy-headers').addEventListener('click', e => { copy(lastHeadersText); flash(e.currentTarget); });
+
+  /* ---------- PREVIEW ---------- */
+  /** URL de la imagen actualmente en pantalla, para revocar su blob: al reemplazarla. */
+  let shownBlobUrl = null;
+
+  function resetPreview(message) {
+    const frame = $('preview-frame');
+    frame.classList.remove('loading', 'error', 'has-image');
+    frame.innerHTML = `<div class="placeholder">${escapeHtml(message || '')}</div>`;
+    if (shownBlobUrl) { URL.revokeObjectURL(shownBlobUrl); shownBlobUrl = null; }
+    $('preview-meta').textContent = '—';
+  }
+
+  /**
+   * Pinta la imagen en el preview. Crea el <img> con la URL blob y SOLO la muestra
+   * cuando terminó de decodificar: así nunca se ve un ícono roto ni un hueco vacío.
+   */
+  function showPreviewImage(blobUrl, meta) {
+    const frame = $('preview-frame');
+    const previousUrl = shownBlobUrl;
+    const img = new Image();
+    img.alt = 'Vista previa de la respuesta del endpoint';
+    img.decoding = 'async';
+    img.addEventListener('load', () => {
+      // Si llegó otra respuesta mientras tanto, esta ya no sirve.
+      if (shownBlobUrl !== previousUrl) { URL.revokeObjectURL(blobUrl); return; }
+      frame.innerHTML = '';
+      frame.appendChild(img);
+      frame.classList.add('has-image');
+      frame.classList.remove('loading', 'error');
+      shownBlobUrl = blobUrl;
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+    }, { once: true });
+    img.addEventListener('error', () => {
+      // La URL blob ya no es válida (petición abortada): se libera y no se toca el marco.
+      URL.revokeObjectURL(blobUrl);
+      frame.classList.remove('loading');
+    }, { once: true });
+    img.src = blobUrl;
+    $('preview-meta').textContent = meta || '';
+  }
+
+  function failPreview(message) {
+    const frame = $('preview-frame');
+    frame.classList.remove('loading', 'has-image');
+    frame.classList.add('error');
+    frame.innerHTML = `<div class="placeholder">⚠ ${escapeHtml(message)}</div>`;
+    $('preview-meta').textContent = 'error';
+  }
+
+  /* ---------- HEADER ---------- */
+  const REQUEST_HEADERS = [
+    ['GET', 'método HTTP de la petición'],
+    ['Accept', 'lo que acepta el cliente (el navegador pide image/* y JSON)'],
+    ['User-Agent', 'identificador del cliente que hace la petición'],
+    ['Connection', 'keep-alive para reutilizar la conexión']
+  ];
+
+  function headerRows(pairs) {
+    if (!pairs.length) return '<tr><td class="h-empty" colspan="2">Sin respuesta todavía.</td></tr>';
+    return pairs.map(([k, v]) => `<tr><td class="h-key">${escapeHtml(k)}</td><td class="h-val">${escapeHtml(v)}</td></tr>`).join('');
+  }
+
+  function renderRequestHeaders(ep) {
+    const rows = [['GET', ep ? ep.path : '/api/…']].concat(REQUEST_HEADERS.slice(1));
+    $('request-headers').innerHTML = headerRows(rows);
+    lastHeadersText = rows.map(([k, v]) => `${k}: ${v}`).join('\n');
+  }
+
+  function renderResponseHeaders(res) {
+    const pairs = [];
+    if (res) {
+      pairs.push([':status', String(res.status)]);
+      res.headers.forEach((v, k) => pairs.push([k, v]));
+    }
+    $('response-headers').innerHTML = headerRows(pairs);
+    lastHeadersText = pairs.map(([k, v]) => `${k}: ${v}`).join('\n');
+  }
 
   /* ---------- ejecución ---------- */
   let inflight = null;
-  let lastBlobUrl = null;
 
   async function execute({ quiet = false } = {}) {
     if (!selected) return;
@@ -266,42 +390,78 @@ document.addEventListener('DOMContentLoaded', () => {
     inflight = controller;
     const url = buildUrl();
     const start = performance.now();
+    const isImageEndpoint = selected.responseType === 'image';
     $('resp-status').textContent = 'status: …';
+
     const viewer = $('response-viewer');
-    if (!quiet || !viewer.querySelector('img')) viewer.innerHTML = '<div class="placeholder">Petición en curso…</div>';
+    const frame = $('preview-frame');
+    frame.classList.add('loading');
+    if (!isImageEndpoint || !frame.querySelector('img')) {
+      frame.innerHTML = `<div class="placeholder">${isImageEndpoint ? 'Generando vista previa…' : 'Petición en curso…'}</div>`;
+    }
+    if (!quiet || !viewer.querySelector('pre')) {
+      viewer.innerHTML = '<div class="placeholder">Petición en curso…</div>';
+    }
     viewer.classList.add('loading');
+
     try {
-      const res = await fetch(url, { signal: controller.signal });
+      // `_pg` solo evita servir una copia cacheada del navegador en la vista previa en vivo.
+      const liveToggle = $('live-toggle');
+      const bust = isImageEndpoint && liveToggle && liveToggle.checked
+        ? `${url.includes('?') ? '&' : '?'}_pg=${Date.now()}`
+        : '';
+      const res = await fetch(url + bust, { signal: controller.signal });
       const ms = Math.round(performance.now() - start);
       const type = res.headers.get('content-type') || '';
+      lastContentType = type;
       $('resp-time').textContent = `${ms} ms`;
       $('resp-status').textContent = `status: ${res.status}`;
-      if (type.includes('json')) {
+      $('resp-status').classList.toggle('bad', res.status >= 400);
+      renderResponseHeaders(res);
+
+      if (/^image\//.test(type)) {
+        const blob = await res.blob();
+        if (controller.signal.aborted) return;
+        const canvasSize = res.headers.get('x-canvas-size');
+        const shortType = type.split(';')[0].replace('image/', '').replace('svg+xml', 'svg');
+        $('resp-type').textContent = `${shortType}${canvasSize ? ' · ' + canvasSize : ''} · ${(blob.size / 1024).toFixed(0)} KB`;
+        lastResponseText = location.origin + url;
+        viewer.innerHTML = `<pre>${escapeHtml(lastResponseText)}</pre>`;
+        if (!res.ok) {
+          failPreview(`El endpoint respondió ${res.status}. Revisa los parámetros.`);
+        } else {
+          showPreviewImage(URL.createObjectURL(blob), `${canvasSize || shortType} · ${(blob.size / 1024).toFixed(0)} KB`);
+        }
+        // Los snippets dependen de la extensión real de la respuesta.
+        updateSnippets();
+      } else if (type.includes('json')) {
         const data = await res.json();
         lastResponseText = JSON.stringify(data, null, 2);
         $('resp-type').textContent = 'json';
         viewer.innerHTML = `<pre>${escapeHtml(lastResponseText)}</pre>`;
-      } else if (/^image\//.test(type)) {
-        const blob = await res.blob();
-        if (controller.signal.aborted) return;
-        if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-        lastBlobUrl = URL.createObjectURL(blob);
-        lastResponseText = location.origin + url;
-        const size = res.headers.get('x-canvas-size');
-        $('resp-type').textContent = `${type.split(';')[0].replace('image/', '').replace('svg+xml', 'svg')}${size ? ' · ' + size : ''} · ${(blob.size / 1024).toFixed(0)} KB`;
-        viewer.innerHTML = `<img src="${lastBlobUrl}" alt="Respuesta del endpoint" />`;
+        if (isImageEndpoint) {
+          failPreview(`Se esperaba una imagen y llegó JSON${res.ok ? '' : ` (status ${res.status})`}.`);
+        } else {
+          frame.classList.remove('loading');
+          $('preview-meta').textContent = 'json';
+        }
       } else {
         const text = await res.text();
         lastResponseText = text;
         $('resp-type').textContent = type.split(';')[0] || 'text';
         viewer.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+        if (isImageEndpoint) failPreview(`Se esperaba una imagen y llegó ${type.split(';')[0] || 'texto'}.`);
+        else frame.classList.remove('loading');
       }
+
       const stats = await fetch('/api/stats').then(r => r.json()).catch(() => null);
       if (stats) $('hits-badge').textContent = `${stats.total_requests || 0} peticiones`;
     } catch (err) {
       if (err && err.name === 'AbortError') return;
       $('resp-status').textContent = 'status: error';
+      $('resp-status').classList.add('bad');
       viewer.innerHTML = `<pre>${escapeHtml(String(err))}</pre>`;
+      failPreview('No se pudo completar la petición (red o CORS).');
     } finally {
       if (inflight === controller) { inflight = null; viewer.classList.remove('loading'); }
     }

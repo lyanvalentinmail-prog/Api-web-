@@ -2,8 +2,17 @@
 
 Clon en español de la SIPUTZX API Console V2: una plataforma Node.js + Express
 con **184 endpoints** organizados en 16 categorías y un **Playground**
-(`/playground`) para ejecutarlos en vivo con snippets de `cURL`, `fetch` y
-`Python` (las imágenes se previsualizan mientras escribes).
+(`/playground`) para ejecutarlos en vivo.
+
+Cada endpoint se abre en una ficha dividida en secciones:
+
+| Sección | Qué muestra |
+| --- | --- |
+| **Parámetros** | Formulario con los query params reales (texto, número, select, color, rango) |
+| **Preview** | La imagen generada por el endpoint, sobre tablero de transparencia, con dimensiones y peso; se regenera mientras escribes |
+| **Header** | Cabeceras de la petición y las cabeceras reales de la respuesta (`content-type`, `x-canvas-size`, `cache-control`…) |
+| **Código de integración** | Snippets listos para copiar en `URL`, `cURL`, `Node.js`, `JavaScript` y `Python` |
+| **Respuesta** | Cuerpo JSON/texto con status, latencia y tipo de contenido |
 
 Sin registro, sin clave API, CORS abierto. Algunos endpoints funcionan con datos
 reales (GitHub, código abierto) y otros devuelven demostraciones deterministas
