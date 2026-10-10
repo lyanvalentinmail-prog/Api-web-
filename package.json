@@ -25,8 +25,13 @@
   "author": "Lyan Valentin",
   "license": "MIT",
   "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "qrcode": "^1.5.4"
+    "jpeg-js": "^0.4.4",
+    "qrcode": "^1.5.4",
+    "webp-wasm": "^1.0.6"
   }
 }

@@ -103,13 +103,26 @@ document.addEventListener('DOMContentLoaded', () => {
     $('response-viewer').innerHTML = '<div class="placeholder">Ejecuta el endpoint para ver la respuesta.</div>';
     $('resp-status').textContent = 'status: —';
     $('resp-time').textContent = '— ms';
-    $('resp-type').textContent = ep.responseType === 'image' ? 'image/svg' : 'json';
+    $('resp-type').textContent = ep.responseType === 'image' ? 'image' : 'json';
+    const live = $('live-toggle');
+    if (live) {
+      live.closest('.live-field').style.display = ep.responseType === 'image' ? '' : 'none';
+      live.checked = ep.responseType === 'image';
+    }
     $('exec-modal').classList.add('open');
+    // Las imágenes se previsualizan al instante; el resto se ejecuta a mano.
+    if (ep.responseType === 'image') execute({ quiet: true });
   }
 
   function closeModal() { $('exec-modal').classList.remove('open'); }
   $('modal-close').addEventListener('click', closeModal);
   $('exec-modal').addEventListener('click', e => { if (e.target === $('exec-modal')) closeModal(); });
+
+  const AVATAR_KEYS = ['ana', 'marco', 'cat', 'lila', 'theo', 'mia', 'bot'];
+
+  function attr(v) {
+    return String(v === undefined || v === null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
 
   function buildForm(ep) {
     const form = $('params-form');
@@ -118,17 +131,82 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     form.innerHTML = ep.params.map(p => {
-      const label = `<div class="field-label"><span>${p.name}</span>${p.required ? '<span class="req">requerido</span>' : ''}</div>`;
+      const hint = p.description ? `<span class="field-hint" title="${attr(p.description)}">${attr(p.description)}</span>` : '';
+      const label = `<div class="field-label"><span>${p.name}${p.required ? ' <span class="req">requerido</span>' : ''}</span>${hint}</div>`;
+      const example = p.example !== undefined && p.example !== null ? String(p.example) : '';
       if (p.type === 'select' && Array.isArray(p.options)) {
         return `${label}<select class="param-select" name="${p.name}">
-          ${p.options.map(o => `<option value="${o}" ${o === p.example ? 'selected' : ''}>${o}</option>`).join('')}
+          ${p.options.map(o => `<option value="${attr(o)}" ${o === p.example ? 'selected' : ''}>${attr(o)}</option>`).join('')}
         </select>`;
       }
-      return `${label}<input class="param-input" name="${p.name}" value="${p.example !== undefined ? String(p.example).replace(/"/g, '&quot;') : ''}" placeholder="${p.description || ''}" />`;
+      if (p.type === 'text') {
+        return `${label}<textarea class="param-input param-textarea" name="${p.name}" rows="2" placeholder="${attr(p.description)}">${attr(example)}</textarea>`;
+      }
+      if (p.type === 'color') {
+        const swatch = /^#[0-9a-f]{6}$/i.test(example) ? example : '#ffffff';
+        return `${label}<div class="color-field">
+          <input type="color" class="color-swatch" data-for="${p.name}" value="${swatch}" title="Elegir color" />
+          <input class="param-input" name="${p.name}" value="${attr(example)}" placeholder="${attr(p.description)}" spellcheck="false" />
+          <button type="button" class="snippet-tab clear-field" data-for="${p.name}" title="Vaciar">×</button>
+        </div>`;
+      }
+      if (p.type === 'range') {
+        const min = p.min !== undefined ? p.min : 0;
+        const max = p.max !== undefined ? p.max : 100;
+        const step = p.step || 1;
+        const val = example !== '' ? example : Math.round((Number(min) + Number(max)) / 2);
+        return `${label}<div class="range-field">
+          <input type="range" class="range-slider" data-for="${p.name}" min="${min}" max="${max}" step="${step}" value="${attr(val)}" />
+          <input class="param-input param-number" type="number" name="${p.name}" min="${min}" max="${max}" step="${step}" value="${attr(example)}" placeholder="auto" />
+        </div>`;
+      }
+      if (p.type === 'number') {
+        return `${label}<input class="param-input" type="number" name="${p.name}" ${p.min !== undefined ? `min="${p.min}"` : ''} ${p.max !== undefined ? `max="${p.max}"` : ''} value="${attr(example)}" placeholder="${attr(p.description)}" />`;
+      }
+      const isAvatar = p.type === 'url' && /^avatar/.test(p.name);
+      const list = isAvatar ? `<datalist id="list-${p.name}">${AVATAR_KEYS.map(k => `<option value="${k}"></option>`).join('')}</datalist>` : '';
+      return `${label}<input class="param-input" name="${p.name}" value="${attr(example)}" placeholder="${attr(p.description)}" ${isAvatar ? `list="list-${p.name}"` : ''} spellcheck="false" />${list}`;
     }).join('');
   }
 
-  $('reset-params').addEventListener('click', () => { if (selected) buildForm(selected); });
+  /* ---------- vista previa en vivo ---------- */
+  const form = $('params-form');
+  let liveTimer = null;
+
+  function scheduleLive() {
+    if (!selected || selected.responseType !== 'image') return;
+    const live = $('live-toggle');
+    if (live && !live.checked) return;
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => execute({ quiet: true }), 350);
+  }
+
+  form.addEventListener('input', e => {
+    const t = e.target;
+    if (t.classList.contains('color-swatch')) {
+      const input = form.querySelector(`[name="${t.dataset.for}"]`);
+      if (input) input.value = t.value;
+    } else if (t.classList.contains('range-slider')) {
+      const input = form.querySelector(`[name="${t.dataset.for}"]`);
+      if (input) input.value = t.value;
+    } else if (t.name) {
+      const swatch = form.querySelector(`.color-swatch[data-for="${t.name}"]`);
+      if (swatch && /^#[0-9a-f]{6}$/i.test(t.value.trim())) swatch.value = t.value.trim();
+      const slider = form.querySelector(`.range-slider[data-for="${t.name}"]`);
+      if (slider && t.value !== '') slider.value = t.value;
+    }
+    updateSnippets();
+    scheduleLive();
+  });
+
+  form.addEventListener('click', e => {
+    const btn = e.target.closest('.clear-field');
+    if (!btn) return;
+    const input = form.querySelector(`[name="${btn.dataset.for}"]`);
+    if (input) { input.value = ''; updateSnippets(); scheduleLive(); }
+  });
+
+  $('reset-params').addEventListener('click', () => { if (selected) { buildForm(selected); updateSnippets(); scheduleLive(); } });
 
   function currentParams() {
     const out = [];
@@ -156,11 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const snippets = {
       url: abs,
       curl: `curl "${abs}"`,
-      js: `const res = await fetch("${abs}");\n${selected.responseType === 'image'
-        ? '// imagen SVG directa: úsala en un <img>\nimg.src = "' + url + '";'
-        : 'const data = await res.json();\nconsole.log(data);'}`,
+      js: selected.responseType === 'image'
+        ? `// imagen directa: úsala en un <img> o descárgala como Blob\nimg.src = "${abs}";\n\nconst blob = await (await fetch("${abs}")).blob();`
+        : `const res = await fetch("${abs}");\nconst data = await res.json();\nconsole.log(data);`,
       python: selected.responseType === 'image'
-        ? `import requests\n\nr = requests.get("${abs}")\nopen("out.svg", "wb").write(r.content)`
+        ? `import requests\n\nr = requests.get("${abs}")\next = r.headers["content-type"].split("/")[-1].replace("svg+xml", "svg").replace("jpeg", "jpg")\nopen(f"out.{ext}", "wb").write(r.content)`
         : `import requests\n\nr = requests.get("${abs}")\nprint(r.json())`
     };
     $('snippet-box').textContent = snippets[snippetLang];
@@ -178,15 +256,22 @@ document.addEventListener('DOMContentLoaded', () => {
   $('copy-response').addEventListener('click', () => copy(lastResponseText));
 
   /* ---------- ejecución ---------- */
-  $('params-form').addEventListener('submit', async e => {
-    e.preventDefault();
+  let inflight = null;
+  let lastBlobUrl = null;
+
+  async function execute({ quiet = false } = {}) {
     if (!selected) return;
+    if (inflight) inflight.abort();
+    const controller = new AbortController();
+    inflight = controller;
     const url = buildUrl();
     const start = performance.now();
     $('resp-status').textContent = 'status: …';
-    $('response-viewer').innerHTML = '<div class="placeholder">Petición en curso…</div>';
+    const viewer = $('response-viewer');
+    if (!quiet || !viewer.querySelector('img')) viewer.innerHTML = '<div class="placeholder">Petición en curso…</div>';
+    viewer.classList.add('loading');
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
       const ms = Math.round(performance.now() - start);
       const type = res.headers.get('content-type') || '';
       $('resp-time').textContent = `${ms} ms`;
@@ -195,21 +280,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         lastResponseText = JSON.stringify(data, null, 2);
         $('resp-type').textContent = 'json';
-        $('response-viewer').innerHTML = `<pre>${escapeHtml(lastResponseText)}</pre>`;
+        viewer.innerHTML = `<pre>${escapeHtml(lastResponseText)}</pre>`;
+      } else if (/^image\//.test(type)) {
+        const blob = await res.blob();
+        if (controller.signal.aborted) return;
+        if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
+        lastBlobUrl = URL.createObjectURL(blob);
+        lastResponseText = location.origin + url;
+        const size = res.headers.get('x-canvas-size');
+        $('resp-type').textContent = `${type.split(';')[0].replace('image/', '').replace('svg+xml', 'svg')}${size ? ' · ' + size : ''} · ${(blob.size / 1024).toFixed(0)} KB`;
+        viewer.innerHTML = `<img src="${lastBlobUrl}" alt="Respuesta del endpoint" />`;
       } else {
         const text = await res.text();
         lastResponseText = text;
-        $('resp-type').textContent = type.includes('svg') ? 'image/svg' : type.split(';')[0];
-        const blobUrl = URL.createObjectURL(new Blob([text], { type: type || 'image/svg+xml' }));
-        $('response-viewer').innerHTML = `<img src="${blobUrl}" alt="Respuesta del endpoint" />`;
+        $('resp-type').textContent = type.split(';')[0] || 'text';
+        viewer.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
       }
       const stats = await fetch('/api/stats').then(r => r.json()).catch(() => null);
       if (stats) $('hits-badge').textContent = `${stats.total_requests || 0} peticiones`;
     } catch (err) {
+      if (err && err.name === 'AbortError') return;
       $('resp-status').textContent = 'status: error';
-      $('response-viewer').innerHTML = `<pre>${escapeHtml(String(err))}</pre>`;
+      viewer.innerHTML = `<pre>${escapeHtml(String(err))}</pre>`;
+    } finally {
+      if (inflight === controller) { inflight = null; viewer.classList.remove('loading'); }
     }
-  });
+  }
+
+  form.addEventListener('submit', e => { e.preventDefault(); execute(); });
+  const liveToggle = $('live-toggle');
+  if (liveToggle) liveToggle.addEventListener('change', () => { if (liveToggle.checked) scheduleLive(); });
 
   function escapeHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

@@ -64,9 +64,12 @@
             <button type="button" class="snippet-tab" id="reset-params">restaurar ejemplos</button>
           </div>
           <form id="params-form"></form>
-          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;">
             <button type="submit" form="params-form" class="btn btn-primary" style="flex:1;">Ejecutar</button>
             <a href="#" target="_blank" rel="noopener" id="open-raw" class="btn btn-outline">Abrir URL</a>
+            <label class="live-field" title="Las imágenes se vuelven a generar mientras escribes">
+              <input type="checkbox" id="live-toggle" checked /> vista previa en vivo
+            </label>
           </div>
 
           <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
