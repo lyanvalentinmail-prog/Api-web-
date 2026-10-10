@@ -388,6 +388,39 @@
             </p>
           </div>
         </div>
+
+        <h4>Cómo se comporta según dónde lo despliegues</h4>
+        <div class="table-wrap">
+          <table class="data-table" id="deployTable">
+            <thead>
+              <tr><th>Plataforma</th><th>Modelo de ejecución</th><th>Qué cambia</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Local, Docker, Render, Railway, Fly.io o VPS</strong></td>
+                <td>Servidor Node permanente (<code>server.js</code>)</td>
+                <td>
+                  Todos los endpoints propios y los externos funcionan igual que aquí. La caché (45 s de estado, cachés de
+                  proveedores) y el limitador de peticiones son por proceso y se mantienen entre peticiones.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Vercel</strong> (u otro entorno serverless)</td>
+                <td>Función por petición, sin proceso permanente</td>
+                <td>
+                  El CRUD de ejemplo se guarda en memoria de la instancia: puede reiniciarse o alternar entre instancias, así
+                  que trátalo como datos volátiles. Las cachés duran lo que vive la instancia, por lo que se hacen más
+                  consultas reales a los proveedores externos (conviene no abusar de <code>/api/status</code>). Los contadores
+                  <code>X-RateLimit-*</code> son orientativos. Todo lo demás se comporta igual.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mini-note">
+          Instrucciones concretas para cada plataforma en el README (sección «Despliegue»). Este proyecto
+          <strong>no está publicado en ninguna URL</strong>: si lo estás viendo en local, se ejecuta sólo en este equipo.
+        </p>
       </div>
     </div>
   </section>

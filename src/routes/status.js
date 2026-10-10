@@ -13,8 +13,6 @@ const router = express.Router();
 const statusCache = new TtlCache({ maxEntries: 8 });
 const CACHE_KEY = 'status';
 
-const CONCURRENCY = 6;
-
 /**
  * Autocomprobaciones funcionales: se ejecutan de verdad contra este mismo
  * servidor por HTTP (loopback) y se verifica el valor esperado. No son
@@ -314,7 +312,7 @@ async function buildStatusReport(req) {
 
   const [selfTests, externalResults] = await Promise.all([
     runSelfTests(baseUrl),
-    mapLimit(providers, CONCURRENCY, (provider) => checkProvider(provider, config.upstream)),
+    mapLimit(providers, config.statusCheckConcurrency, (provider) => checkProvider(provider, config.upstream)),
   ]);
 
   const passed = selfTests.filter((test) => test.ok).length;

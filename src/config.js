@@ -32,15 +32,27 @@ function readList(env, name, fallback) {
 }
 
 /**
+ * Detecta si estamos ejecutando dentro de una función serverless.
+ * En Vercel las funciones corren en AWS Lambda, que expone AWS_LAMBDA_FUNCTION_NAME;
+ * también se respeta una variable propia por si se usa otro proveedor.
+ */
+function detectServerless(env) {
+  if (readBool(env, 'SERVERLESS', false)) return true;
+  return Boolean(env.VERCEL || env.AWS_LAMBDA_FUNCTION_NAME || env.AWS_EXECUTION_ENV);
+}
+
+/**
  * @param {NodeJS.ProcessEnv} [env]
  */
 function loadConfig(env = process.env) {
   const nodeEnv = env.NODE_ENV || 'development';
   const isProduction = nodeEnv === 'production';
+  const serverless = detectServerless(env);
 
   return {
     nodeEnv,
     isProduction,
+    serverless,
     /** Puerto HTTP. En la mayoría de plataformas (Render, Railway, Fly…) viene en PORT. */
     port: readInt(env, 'PORT', 3000, { min: 0, max: 65535 }),
     /** Interfaz de escucha. 0.0.0.0 es necesario para contenedores y despliegues. */
@@ -48,9 +60,11 @@ function loadConfig(env = process.env) {
     /**
      * Número de proxies de confianza por delante de la app. Se usa para que la
      * IP real del cliente (y por tanto el limitador de peticiones) funcione
-     * detrás de un proxy. 0 = sin proxy (valor por defecto seguro).
+     * detrás de un proxy. Por defecto 1 en producción (todas las plataformas
+     * habituales ponen un proxy) y 0 en desarrollo; ajústalo si tu montaje es
+     * distinto (por ejemplo TRUST_PROXY=2 con un CDN delante de un proxy).
      */
-    trustProxy: readInt(env, 'TRUST_PROXY', 0, { min: 0, max: 10 }),
+    trustProxy: readInt(env, 'TRUST_PROXY', isProduction ? 1 : 0, { min: 0, max: 10 }),
     /**
      * Orígenes permitidos por CORS. Por defecto cualquiera, porque la API es
      * pública, no usa cookies ni API keys y por diseño se quiere poder llamar
@@ -79,6 +93,11 @@ function loadConfig(env = process.env) {
     },
     /** Segundos que se reutiliza el resultado de /api/status. */
     statusCacheTtlMs: readInt(env, 'STATUS_CACHE_TTL_MS', 45_000, { min: 0 }),
+    /**
+     * Nº de comprobaciones simultáneas a proveedores externos en /api/status.
+     * En serverless se reduce porque el tiempo máximo de ejecución es corto.
+     */
+    statusCheckConcurrency: readInt(env, 'STATUS_CHECK_CONCURRENCY', serverless ? 4 : 6, { min: 1, max: 16 }),
     /** Timeout y tamaño máximo para las llamadas a APIs externas. */
     upstream: {
       timeoutMs: readInt(env, 'UPSTREAM_TIMEOUT_MS', 8000, { min: 500, max: 60_000 }),
@@ -90,3 +109,4 @@ function loadConfig(env = process.env) {
 
 module.exports = loadConfig;
 module.exports.loadConfig = loadConfig;
+module.exports.detectServerless = detectServerless;

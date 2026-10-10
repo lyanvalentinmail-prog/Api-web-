@@ -65,7 +65,10 @@ plataforma de despliegue. Hay un `.env.example` con todas las opciones comentada
 
 > **Importante (honestidad sobre el despliegue):** este repositorio **no está publicado en Internet**.
 > Cuando ejecutas `npm start`, la web y la API funcionan **solo en tu equipo** (`http://localhost:3000`).
-> Si quieres que sea accesible públicamente, despliégala siguiendo la sección 10.
+> Para publicarla: **Render** es la opción más sencilla y funciona completa (capa gratuita, `render.yaml`
+> incluido); **Vercel** también funciona con matices, porque es serverless y allí el CRUD de ejemplo y las
+> cachés son volátiles (adaptador `api/index.js` incluido). Comparativa de plataformas en la
+> [sección 10](#10-despliegue).
 
 ## 3. Estructura del proyecto
 
@@ -100,8 +103,9 @@ Api-web-/
 │   ├── endpoints.own.tools.json  # Texto, JSON, matemáticas, utilidades y CRUD
 │   └── endpoints.external.json   # 19 proxies de terceros (16 proveedores)
 ├── test/                         # Pruebas automáticas (node:test, sin dependencias)
+├── api/index.js                  # Adaptador serverless para Vercel
 ├── dev/frontend-check.mjs        # Revisión de la interfaz con jsdom (opcional)
-└── Dockerfile  render.yaml  Procfile  .dockerignore
+└── Dockerfile  render.yaml  Procfile  vercel.json  .env.example
 ```
 
 ## 4. Catálogo de endpoints
@@ -582,23 +586,86 @@ cuerpo HTTP de 256 KB, JSON de 100 KB, respuestas externas de 1 MB o 512 KB si s
 
 ## 10. Despliegue
 
-Variables de entorno disponibles (todas opcionales, con valores por defecto sensatos):
+### 10.1 ¿Dónde se puede desplegar?
+
+| Plataforma | ¿Funciona? | Modelo | Qué debes saber |
+| --- | --- | --- | --- |
+| **Render** (capa gratuita) | ✅ Sí — **opción recomendada** | Servidor Node permanente | Todo funciona igual que en local. El repositorio incluye `render.yaml` (Blueprint). En el plan gratuito el servicio se suspende tras ~15 minutos sin tráfico y la siguiente petición tarda unos segundos en despertarlo. |
+| **Vercel** (capa gratuita) | ⚠️ Sí, con matices | Una función por petición (serverless) | El repositorio incluye el adaptador `api/index.js` y `vercel.json`. El CRUD de ejemplo y las cachés viven en la instancia, así que los datos son volátiles. Ver 10.3. |
+| **Railway** | ✅ Sí | Servidor permanente | Incluye `Procfile`. Ya no tiene plan gratuito permanente (créditos de prueba con tarjeta). |
+| **Fly.io, Koyeb, Northflank** | ✅ Sí | Contenedor permanente | Incluye `Dockerfile`; capas gratuitas limitadas pero suficientes para este proyecto. |
+| **Docker en cualquier servidor** | ✅ Sí | Contenedor permanente | `docker build -t freeapi-hub . && docker run -p 3000:3000 freeapi-hub`. |
+| **VPS propio o PC en casa** | ✅ Sí | Servidor permanente | `pm2`/`systemd` + Nginx o Caddy. La opción con más control. |
+| **Netlify** | ⚠️ No recomendado | Funciones serverless | No lee `vercel.json`: habría que reescribir las reglas de redirección a `/api` y las funciones tienen ~10 s de límite. |
+| **GitHub Pages, Cloudflare Pages (solo estáticos)** | ❌ No | Solo ficheros estáticos | No ejecutan Node: la interfaz se vería, pero ninguna API respondería. |
+| **Replit, Glitch y similares** | ⚠️ Depende | Contenedor | Ejecutan Node, pero pueden requerir mantener el proceso activo y tienen límites de uso; Glitch está en cierre progresivo. |
+
+**Resumen:** si quieres que todo (incluido el CRUD de ejemplo y las cachés) se comporte exactamente
+igual que en local, usa un **servidor permanente** (Render, Railway, Fly.io, Docker, VPS). Si sólo te
+interesan los endpoints propios y sin estado, **Vercel vale perfectamente**.
+
+### 10.2 Variables de entorno
+
+Todas son opcionales y tienen valores por defecto sensatos:
 
 | Variable | Por defecto | Para qué sirve |
 | --- | --- | --- |
 | `PORT` | `3000` | Puerto HTTP (la mayoría de plataformas lo inyectan). |
 | `HOST` | `0.0.0.0` | Interfaz de escucha. |
 | `NODE_ENV` | `development` | Con `production` activa caché de estáticos y HSTS. |
-| `TRUST_PROXY` | `0` | Número de proxies de confianza (necesario para que el limitador vea la IP real detrás de un proxy). |
+| `TRUST_PROXY` | `1` en producción, `0` en desarrollo | Número de proxies de confianza (necesario para que el limitador vea la IP real detrás de un proxy/CDN). |
 | `CORS_ORIGINS` | `*` | Lista separada por comas para restringir orígenes. |
 | `LOG_REQUESTS` | `true` | Registro de cada petición en consola. |
 | `STATUS_CACHE_TTL_MS` | `45000` | Duración de la caché del informe de estado. |
+| `STATUS_CHECK_CONCURRENCY` | `6` (`4` en serverless) | Comprobaciones simultáneas a proveedores externos. |
 | `UPSTREAM_TIMEOUT_MS` | `8000` | Timeout de las llamadas a proveedores externos. |
 | `UPSTREAM_MAX_BYTES` | `1000000` | Tamaño máximo de respuesta externa (texto/JSON). |
 | `UPSTREAM_BINARY_MAX_BYTES` | `512000` | Tamaño máximo de respuesta externa binaria (imágenes). |
 | `BODY_LIMIT` | `256kb` | Tamaño máximo del cuerpo de las peticiones. |
 
-### 10.1 Docker
+### 10.3 Render (capa gratuita) — opción recomendada
+
+1. Sube el repositorio a GitHub (ya está) y en Render elige **New → Blueprint** (o **New → Web Service**).
+2. Con el Blueprint, Render lee `render.yaml` y configura todo solo. Manualmente: Build Command
+   `npm ci`, Start Command `npm start`, Health Check Path `/api/health`.
+3. Variables: `NODE_ENV=production` y `TRUST_PROXY=1` (ya vienen en `render.yaml`).
+4. Espera el despliegue y abre `https://<tu-servicio>.onrender.com`.
+
+En este despliegue **funciona todo**, incluidos el CRUD de ejemplo y las cachés, mientras el servicio
+esté despierto. Recuerda que la capa gratuita suspende el servicio sin tráfico.
+
+### 10.4 Vercel (capa gratuita, serverless)
+
+El repositorio ya está preparado: la función vive en `api/index.js` (exporta la app Express) y
+`vercel.json` redirige `/api/*` a esa función, además de incluir los archivos del catálogo
+(`shared/catalog/**`) en el despliegue.
+
+1. En Vercel: **Add New → Project → Import Git Repository** y selecciona el repositorio.
+2. Framework Preset: **Other**. No cambies Build ni Output: Vercel sirve `public/` como sitio
+   estático y publica `api/index.js` como función.
+3. (Opcional) Añade la variable `TRUST_PROXY=1` para que el limitador vea la IP real.
+4. Deploy y abre `https://<tu-proyecto>.vercel.app`.
+
+Con la CLI:
+
+```bash
+npm install -g vercel
+vercel          # despliegue de prueba
+vercel --prod   # despliegue de producción
+```
+
+**Qué cambia respecto a un servidor permanente** (esto es importante y no se oculta):
+
+| Aspecto | Comportamiento en Vercel |
+| --- | --- |
+| Endpoints propios y externos | Funcionan igual (los externos dependen de su proveedor, como siempre). |
+| CRUD de ejemplo (`/api/demo/*`) | Los datos viven en la memoria de la instancia: pueden reiniciarse o alternar entre instancias. Son datos de práctica, no almacenamiento real. |
+| Cachés (estado 45 s, proveedores) | Duran lo que vive la instancia: se hacen más consultas reales a los proveedores externos. No abuses de `/api/status` en producción. |
+| Limitador de peticiones | Es por instancia: sigue frenando abusos, pero no es una cuota global exacta. Las cabeceras `X-RateLimit-*` son orientativas. |
+| Arranque en frío | La primera petición tras un rato sin tráfico puede tardar un poco más. |
+| `/api/status` | El chequeo completo consulta 16 proveedores; con la concurrencia reducida (4) y los timeouts, cabe en el límite de tiempo de la función, pero puede tardar varios segundos. |
+
+### 10.5 Docker
 
 ```bash
 docker build -t freeapi-hub .
@@ -606,19 +673,12 @@ docker run --rm -p 3000:3000 -e NODE_ENV=production freeapi-hub
 # Abrir http://localhost:3000
 ```
 
-### 10.2 Render (plan gratuito)
+### 10.6 Railway / plataformas compatibles con Procfile
 
-1. Sube el repositorio a GitHub y en Render elige **New → Web Service**.
-2. Build Command: `npm ci` · Start Command: `npm start` · Health Check Path: `/api/health`.
-3. Añade las variables `NODE_ENV=production` y `TRUST_PROXY=1` (Render pone un proxy delante).
-4. El repositorio incluye `render.yaml` (Blueprint), así que también puedes usar **New → Blueprint**.
+El repositorio incluye un `Procfile` con `web: node server.js`. En Railway: **New Project → Deploy from
+GitHub**, añade `NODE_ENV=production` y deja que la plataforma inyecte `PORT`.
 
-### 10.3 Railway / Heroku-like
-
-El proyecto incluye `Procfile` con `web: node server.js`. En Railway: **New Project → Deploy from GitHub**;
-añade `NODE_ENV=production` y `TRUST_PROXY=1`. Railway inyecta `PORT` automáticamente.
-
-### 10.4 Fly.io
+### 10.7 Fly.io
 
 ```bash
 fly launch --no-deploy      # detecta el Dockerfile
@@ -626,7 +686,7 @@ fly deploy
 fly secrets set NODE_ENV=production TRUST_PROXY=1
 ```
 
-### 10.5 VPS propio (systemd o pm2)
+### 10.8 VPS propio (systemd o pm2)
 
 ```bash
 git clone https://github.com/lyanvalentinmail-prog/Api-web-.git /opt/freeapi-hub
@@ -635,13 +695,13 @@ NODE_ENV=production TRUST_PROXY=1 PORT=3000 pm2 start server.js --name freeapi-h
 pm2 save && pm2 startup
 ```
 
-Detrás de Nginx/Caddy, recuerda el proxy inverso y `TRUST_PROXY=1` para que el limitador vea la IP real.
-No hace falta ninguna base de datos ni servicio de pago.
+Detrás de Nginx o Caddy, configura el proxy inverso y `TRUST_PROXY=1` para que el limitador vea la IP
+real. No hace falta ninguna base de datos ni servicio de pago.
 
-> **Escalado horizontal**: el limitador de peticiones y la caché viven en memoria del proceso. Con varias
-> instancias, cada una aplica su propia cuota (el comportamiento es correcto, sólo menos estricto). Para
-> algo más estricto, sustituye `src/lib/rate-limit.js` por un almacén compartido (Redis) o activa un
-> limitador en el proxy/CDN.
+> **Escalado horizontal**: en un servidor permanente, el limitador de peticiones y las cachés viven en
+> memoria del proceso. Con varias instancias, cada una aplica su propia cuota (el comportamiento es
+> correcto, sólo menos estricto). Para algo más estricto, sustituye `src/lib/rate-limit.js` por un almacén
+> compartido (Redis) o activa un limitador en el proxy/CDN.
 
 ## 11. Pruebas
 
@@ -660,6 +720,9 @@ npm test
   existe de verdad y acepta el método documentado (así no puede haber endpoints inventados).
 - **Escáner de JSON** (`test/json-scan.test.js`): verifica que su veredicto coincide con `JSON.parse` en una
   muestra amplia y que localiza línea, columna y fragmento.
+- **Adaptador serverless** (`test/serverless.test.js`): comprueba que `server.js` no abre puertos al ser
+  importado, que `api/index.js` responde de verdad y que el catálogo se lee desde disco con otro directorio
+  de trabajo (como ocurre en Vercel).
 
 Revisión opcional de la interfaz en un DOM real (jsdom):
 
@@ -686,6 +749,9 @@ estado y accesibilidad, y falla si aparece cualquier error de consola.
   caché reduce el consumo, pero no lo elimina.
 - **Estado en caché**: `/api/status` reutiliza el informe 45 segundos (configurable) para no abusar de los
   proveedores; usa `?refresh=true` para forzar una comprobación completa.
+- **En serverless (Vercel) nada es persistente**: el CRUD de ejemplo, las cachés y el contador de límites
+  viven en la instancia y desaparecen con ella. Para un comportamiento idéntico al local, usa un servidor
+  permanente (Render, Railway, Fly.io, Docker o un VPS).
 - **Este repositorio no está desplegado**: no hay ninguna URL pública asociada. El servicio corre donde tú
   lo ejecutes.
 
