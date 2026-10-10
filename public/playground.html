@@ -57,40 +57,69 @@
         <button type="button" class="modal-close" id="modal-close" title="Cerrar (Esc)">×</button>
       </div>
       <div class="modal-body">
+        <!-- ============ COLUMNA IZQUIERDA: petición ============ -->
         <div>
-          <p id="modal-description" style="color:var(--muted); font-size:13.5px; margin:0 0 4px;"></p>
-          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <p id="modal-description" class="modal-description"></p>
+
+          <div class="panel-title panel-title-row">
             PARÁMETROS
             <button type="button" class="snippet-tab" id="reset-params">restaurar ejemplos</button>
           </div>
           <form id="params-form"></form>
-          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;">
-            <button type="submit" form="params-form" class="btn btn-primary" style="flex:1;">Ejecutar</button>
+          <div class="exec-actions">
+            <button type="submit" form="params-form" class="btn btn-primary exec-run">Ejecutar</button>
             <a href="#" target="_blank" rel="noopener" id="open-raw" class="btn btn-outline">Abrir URL</a>
-            <label class="live-field" title="Las imágenes se vuelven a generar mientras escribes">
+            <label class="live-field" id="live-field" title="La vista previa se vuelve a generar mientras escribes">
               <input type="checkbox" id="live-toggle" checked /> vista previa en vivo
             </label>
           </div>
 
-          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="panel-title panel-title-row">
             CÓDIGO DE INTEGRACIÓN
             <button type="button" class="snippet-tab" id="copy-snippet">copiar</button>
           </div>
-          <div class="snippet-tabs" id="snippet-tabs">
+          <div class="snippet-tabs" id="snippet-tabs" role="tablist">
             <button type="button" class="snippet-tab active" data-lang="url">URL</button>
             <button type="button" class="snippet-tab" data-lang="curl">cURL</button>
-            <button type="button" class="snippet-tab" data-lang="js">fetch</button>
+            <button type="button" class="snippet-tab" data-lang="node">Node.js</button>
+            <button type="button" class="snippet-tab" data-lang="js">JavaScript</button>
             <button type="button" class="snippet-tab" data-lang="python">Python</button>
           </div>
           <pre class="code-block" id="snippet-box" style="min-height:120px;"></pre>
         </div>
 
+        <!-- ============ COLUMNA DERECHA: preview + headers + respuesta ============ -->
         <div>
-          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="panel-title panel-title-row">
+            PREVIEW
+            <span class="preview-meta" id="preview-meta">—</span>
+          </div>
+          <div class="preview-frame" id="preview-frame">
+            <div class="placeholder" id="preview-placeholder">Ejecuta el endpoint para ver la imagen.</div>
+          </div>
+
+          <div class="panel-title panel-title-row">
+            HEADER
+            <button type="button" class="snippet-tab" id="copy-headers">copiar</button>
+          </div>
+          <div class="headers-box" id="headers-box">
+            <div class="headers-group-title">Request</div>
+            <table class="headers-table">
+              <tbody id="request-headers"></tbody>
+            </table>
+            <div class="headers-group-title">Response</div>
+            <table class="headers-table">
+              <tbody id="response-headers">
+                <tr><td class="h-empty" colspan="2">Sin respuesta todavía.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel-title panel-title-row">
             RESPUESTA
             <button type="button" class="snippet-tab" id="copy-response">copiar</button>
           </div>
-          <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+          <div class="resp-pills">
             <span class="meta-pill" id="resp-status">status: —</span>
             <span class="meta-pill" id="resp-time">— ms</span>
             <span class="meta-pill" id="resp-type">—</span>
