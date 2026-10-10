@@ -1,0 +1,540 @@
+[
+  {
+    "id": "health",
+    "name": "Estado del servidor",
+    "category": "sistema",
+    "type": "own",
+    "path": "/api/health",
+    "methods": ["GET"],
+    "summary": "Comprueba que el servidor está en marcha y devuelve su tiempo de actividad y memoria.",
+    "description": "Endpoint de tipo liveness. Se ejecuta en este servidor (no llama a terceros) y siempre responde 200 si el proceso está vivo. Úsalo para monitorización básica o como primer ejemplo para probar la plataforma.",
+    "parameters": [],
+    "exampleRequest": "GET /api/health",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "status": "ok",
+          "uptimeSeconds": 128.42,
+          "startedAt": "2026-10-10T18:00:00.000Z",
+          "node": "v22.22.3",
+          "pid": 4821,
+          "memory": { "rssMb": 52.4, "heapUsedMb": 11.8 },
+          "checks": [{ "name": "catalogo-cargado", "ok": true, "durationMs": 0 }]
+        },
+        "meta": {
+          "endpoint": "/api/health",
+          "method": "GET",
+          "durationMs": 1,
+          "timestamp": "2026-10-10T18:02:08.420Z",
+          "requestId": "8f2c1a4e"
+        }
+      }
+    },
+    "responseFields": [
+      { "name": "data.status", "type": "string", "description": "Siempre \"ok\" cuando el servidor responde." },
+      { "name": "data.uptimeSeconds", "type": "number", "description": "Segundos desde que arrancó el proceso." },
+      { "name": "data.memory", "type": "object", "description": "Uso de memoria en megabytes (RSS y heap)." },
+      { "name": "data.checks", "type": "array", "description": "Comprobaciones internas rápidas con su resultado." }
+    ],
+    "errors": [],
+    "tags": ["monitorización", "sin parámetros"]
+  },
+  {
+    "id": "info",
+    "name": "Información pública de la API",
+    "category": "sistema",
+    "type": "own",
+    "path": "/api/info",
+    "methods": ["GET"],
+    "summary": "Metadatos del servicio: versión, número de endpoints, autenticación, CORS y límites de uso.",
+    "description": "Devuelve información pública del servicio (nunca datos sensibles ni variables de entorno). Se calcula en el momento a partir del catálogo real, de modo que los contadores siempre coinciden con los endpoints implementados.",
+    "parameters": [],
+    "exampleRequest": "GET /api/info",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "name": "FreeAPI Hub",
+          "version": "1.0.0",
+          "description": "Plataforma con un catálogo de APIs públicas y utilidades propias.",
+          "authentication": { "required": false, "apiKey": false, "signup": false, "login": false },
+          "counts": { "ownEndpoints": 30, "externalEndpoints": 12, "categories": 9, "totalEndpoints": 42 },
+          "documentation": {
+            "catalog": "/api/catalog",
+            "status": "/api/status",
+            "openapi": "/api/openapi.json",
+            "readme": "/README.md"
+          },
+          "rateLimits": { "general": "120 peticiones por minuto y por IP sobre /api/*" },
+          "cors": { "enabled": true, "origins": "*", "credentials": false },
+          "license": "MIT",
+          "server": { "node": "v22.22.3", "uptimeSeconds": 128.42 }
+        },
+        "meta": { "endpoint": "/api/info", "method": "GET", "durationMs": 2, "timestamp": "2026-10-10T18:02:09.100Z", "requestId": "1b7d90aa" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.authentication", "type": "object", "description": "Confirma que no se requiere registro, login ni API key." },
+      { "name": "data.counts", "type": "object", "description": "Número de endpoints propios, externos y categorías del catálogo actual." },
+      { "name": "data.rateLimits", "type": "object", "description": "Límites de peticiones aplicados por el servidor." }
+    ],
+    "errors": [],
+    "tags": ["metadatos", "sin parámetros"]
+  },
+  {
+    "id": "catalog",
+    "name": "Catálogo completo de endpoints",
+    "category": "sistema",
+    "type": "own",
+    "path": "/api/catalog",
+    "methods": ["GET"],
+    "summary": "Todo el catálogo en JSON: categorías, endpoints, parámetros, ejemplos y límites.",
+    "description": "Es la misma información que alimenta la interfaz web: cada tarjeta, filtro y formulario del probador se construye a partir de esta respuesta. Si quieres integrar el catálogo en tu propia herramienta, este es el endpoint que debes consumir.",
+    "parameters": [
+      {
+        "name": "type",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "own",
+        "enum": ["own", "external", "demo"],
+        "description": "Filtra los endpoints por origen: propios, externos o el CRUD de demostración."
+      },
+      {
+        "name": "category",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "texto",
+        "description": "Filtra por identificador de categoría (ver data.categories)."
+      },
+      {
+        "name": "compact",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "description": "Con true devuelve sólo id, nombre, categoría, ruta y métodos (respuesta mucho más pequeña)."
+      }
+    ],
+    "exampleRequest": "GET /api/catalog?category=texto",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "meta": { "name": "FreeAPI Hub", "version": "1.0.0", "auth": "Ninguna." },
+          "categories": [{ "id": "texto", "name": "Texto", "description": "Transformaciones y estadísticas de texto." }],
+          "count": 1,
+          "endpoints": [
+            {
+              "id": "text-reverse",
+              "name": "Invertir texto",
+              "type": "own",
+              "path": "/api/text/reverse",
+              "methods": ["GET"],
+              "category": "texto",
+              "summary": "Devuelve el texto recibido al revés."
+            }
+          ]
+        },
+        "meta": { "endpoint": "/api/catalog", "method": "GET", "durationMs": 3, "timestamp": "2026-10-10T18:02:10.000Z", "requestId": "77ab12cd" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.endpoints[].parameters", "type": "array", "description": "Parámetros aceptados, con tipo, ejemplo y si son obligatorios." },
+      { "name": "data.endpoints[].exampleResponse", "type": "object", "description": "Ejemplo real de respuesta y su código HTTP." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_ENUM", "message": "El valor de type o category no existe en el catálogo." }
+    ],
+    "tags": ["metadatos", "descubrimiento"]
+  },
+  {
+    "id": "openapi",
+    "name": "Especificación OpenAPI 3.0",
+    "category": "sistema",
+    "type": "own",
+    "path": "/api/openapi.json",
+    "methods": ["GET"],
+    "summary": "Documento OpenAPI generado desde el catálogo, listo para Postman, Insomnia o Swagger UI.",
+    "description": "Se genera en tiempo de ejecución a partir de las mismas definiciones que usa la documentación web, así que nunca queda desincronizado. Puedes importarlo directamente en Postman (Importar → Enlace) o en Swagger Editor.",
+    "parameters": [],
+    "exampleRequest": "GET /api/openapi.json",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "openapi": "3.0.3",
+        "info": { "title": "FreeAPI Hub", "version": "1.0.0", "description": "APIs públicas gratuitas sin registro ni API key." },
+        "servers": [{ "url": "https://tu-dominio.example" }],
+        "paths": { "/api/health": { "get": { "summary": "Estado del servidor" } } }
+      }
+    },
+    "responseFields": [
+      { "name": "paths", "type": "object", "description": "Un objeto por ruta con sus métodos, parámetros y respuestas." },
+      { "name": "components.schemas", "type": "object", "description": "Reutiliza un mismo formato de respuesta para endpoints propios y externos." }
+    ],
+    "errors": [],
+    "tags": ["metadatos", "integración"]
+  },
+  {
+    "id": "status",
+    "name": "Estado real de los servicios",
+    "category": "sistema",
+    "type": "own",
+    "path": "/api/status",
+    "methods": ["GET"],
+    "summary": "Comprueba en vivo los endpoints propios y los proveedores externos, con tiempos de respuesta.",
+    "description": "Ejecuta pruebas funcionales reales (no simuladas) sobre la API propia y consultas de verdad a cada proveedor externo, midiendo el tiempo de respuesta. Los resultados se cachean unos segundos para no abusar de los límites de terceros; en la respuesta se indica siempre si el dato viene de la caché y cuándo se comprobó.",
+    "parameters": [
+      {
+        "name": "refresh",
+        "in": "query",
+        "type": "boolean",
+        "required": false,
+        "example": "false",
+        "description": "Con true ignora la caché y repite todas las comprobaciones ahora mismo."
+      },
+      {
+        "name": "scope",
+        "in": "query",
+        "type": "string",
+        "required": false,
+        "example": "all",
+        "enum": ["all", "own", "external"],
+        "description": "Limita la comprobación a los servicios propios o a los externos."
+      }
+    ],
+    "exampleRequest": "GET /api/status",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "generatedAt": "2026-10-10T18:05:00.000Z",
+          "cached": false,
+          "summary": {
+            "totalServices": 13,
+            "operational": 12,
+            "degraded": 1,
+            "down": 0,
+            "ownSelfTests": { "total": 8, "passed": 8 }
+          },
+          "own": {
+            "name": "FreeAPI Hub",
+            "status": "operational",
+            "uptimeSeconds": 428.1,
+            "selfTests": [{ "id": "math-add", "name": "Suma 5 + 3 = 8", "ok": true, "durationMs": 0 }]
+          },
+          "external": [
+            {
+              "id": "catfact-fact",
+              "name": "Cat Fact Ninja — Dato curioso",
+              "provider": "catfact.ninja",
+              "status": "operational",
+              "httpStatus": 200,
+              "durationMs": 312,
+              "checkedAt": "2026-10-10T18:05:00.000Z",
+              "cached": false,
+              "message": "El proveedor respondió correctamente."
+            }
+          ],
+          "networkHint": null
+        },
+        "meta": { "endpoint": "/api/status", "method": "GET", "durationMs": 1840, "timestamp": "2026-10-10T18:05:00.100Z", "requestId": "9a02fe31" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.summary", "type": "object", "description": "Recuento de servicios operativos, degradados y caídos, más el resultado de las pruebas propias." },
+      { "name": "data.own.selfTests", "type": "array", "description": "Pruebas funcionales ejecutadas contra la propia API, con el valor esperado y el obtenido." },
+      { "name": "data.external[].status", "type": "string", "description": "operational | degraded | down según la respuesta real del proveedor." },
+      { "name": "data.networkHint", "type": "string", "description": "Aparece si todos los servicios externos fallan, para avisar de que el problema es de la red del servidor y no de las APIs." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_ENUM", "message": "El parámetro scope debe ser all, own o external." }
+    ],
+    "tags": ["monitorización", "estado"]
+  },
+  {
+    "id": "random-number",
+    "name": "Número aleatorio",
+    "category": "aleatorio",
+    "type": "own",
+    "path": "/api/random/number",
+    "methods": ["GET"],
+    "summary": "Genera uno o varios números aleatorios dentro de un rango que tú eliges.",
+    "description": "Usa el generador criptográfico del sistema (crypto.randomInt / crypto.randomBytes), no Math.random, así que los valores son aptos para sorteos, tokens cortos y pruebas. Para números enteros hace muestreo uniforme sin sesgo.",
+    "parameters": [
+      { "name": "min", "in": "query", "type": "number", "required": false, "example": "1", "default": "1", "description": "Límite inferior del rango (incluido)." },
+      { "name": "max", "in": "query", "type": "number", "required": false, "example": "100", "default": "100", "description": "Límite superior del rango. Debe ser mayor que min." },
+      { "name": "count", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Cuántos números devolver (1 a 50)." },
+      { "name": "integer", "in": "query", "type": "boolean", "required": false, "example": "true", "default": "true", "description": "Con false devuelve decimales dentro del rango." }
+    ],
+    "exampleRequest": "GET /api/random/number?min=1&max=100&count=1",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "min": 1,
+          "max": 100,
+          "integer": true,
+          "count": 1,
+          "values": [57],
+          "value": 57,
+          "algorithm": "crypto.randomInt"
+        },
+        "meta": { "endpoint": "/api/random/number", "method": "GET", "durationMs": 1, "timestamp": "2026-10-10T18:02:11.000Z", "requestId": "c4e1b820" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.values", "type": "array<number>", "description": "Siempre presente: el array con todos los números generados." },
+      { "name": "data.value", "type": "number", "description": "Atajo que aparece sólo cuando count=1." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_NUMBER", "message": "min o max no son números válidos." },
+      { "status": 400, "code": "INVALID_RANGE", "message": "max debe ser mayor que min." },
+      { "status": 400, "code": "INVALID_INTEGER", "message": "count debe ser un número entero entre 1 y 50." }
+    ],
+    "tags": ["aleatorio", "criptografía"]
+  },
+  {
+    "id": "random-uuid",
+    "name": "UUID v4",
+    "category": "aleatorio",
+    "type": "own",
+    "path": "/api/random/uuid",
+    "methods": ["GET"],
+    "summary": "Genera identificadores únicos universales versión 4 (aleatorios).",
+    "description": "Cada UUID se genera con crypto.randomUUID() del runtime de Node.js, que se basa en una fuente de aleatoriedad criptográficamente segura. Ideal para claves de idempotencia, nombres de archivo o identificadores de prueba.",
+    "parameters": [
+      { "name": "count", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Cuántos UUID generar (1 a 50)." },
+      { "name": "uppercase", "in": "query", "type": "boolean", "required": false, "example": "false", "default": "false", "description": "Devuelve los UUID en mayúsculas." }
+    ],
+    "exampleRequest": "GET /api/random/uuid",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "version": "v4",
+          "count": 1,
+          "uppercase": false,
+          "uuids": ["9c2f7b1e-4a57-4e6d-9c3a-8b1d5f0e2a77"],
+          "uuid": "9c2f7b1e-4a57-4e6d-9c3a-8b1d5f0e2a77"
+        },
+        "meta": { "endpoint": "/api/random/uuid", "method": "GET", "durationMs": 0, "timestamp": "2026-10-10T18:02:12.000Z", "requestId": "0d3f8a19" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.uuids", "type": "array<string>", "description": "Lista de UUID generados." },
+      { "name": "data.uuid", "type": "string", "description": "Atajo que aparece sólo cuando count=1." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_INTEGER", "message": "count debe ser un entero entre 1 y 50." }
+    ],
+    "tags": ["aleatorio", "identificadores"]
+  },
+  {
+    "id": "random-string",
+    "name": "Cadena aleatoria",
+    "category": "aleatorio",
+    "type": "own",
+    "path": "/api/random/string",
+    "methods": ["GET"],
+    "summary": "Genera cadenas aleatorias seguras con el alfabeto que elijas.",
+    "description": "Muestreo uniforme con crypto.randomInt, sin sesgo por módulo. Aviso de seguridad: estas cadenas sirven para pruebas, identificadores y códigos cortos; para contraseñas de producción usa un gestor de contraseñas dedicado.",
+    "parameters": [
+      { "name": "length", "in": "query", "type": "integer", "required": false, "example": "16", "default": "16", "description": "Longitud de cada cadena (1 a 256)." },
+      { "name": "charset", "in": "query", "type": "string", "required": false, "example": "alphanumeric", "enum": ["alphanumeric", "letters", "lowercase", "uppercase", "numbers", "hex", "base64"], "default": "alphanumeric", "description": "Conjunto de caracteres a usar." },
+      { "name": "count", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Cuántas cadenas generar (1 a 50)." }
+    ],
+    "exampleRequest": "GET /api/random/string?length=16&charset=alphanumeric",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "length": 16,
+          "charset": "alphanumeric",
+          "alphabetSize": 62,
+          "count": 1,
+          "strings": ["K7dQ2mXp9Rt4WzLb"],
+          "value": "K7dQ2mXp9Rt4WzLb"
+        },
+        "meta": { "endpoint": "/api/random/string", "method": "GET", "durationMs": 0, "timestamp": "2026-10-10T18:02:13.000Z", "requestId": "55be70c2" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.strings", "type": "array<string>", "description": "Cadenas generadas." },
+      { "name": "data.alphabetSize", "type": "integer", "description": "Número de símbolos del alfabeto usado (útil para calcular entropía)." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_ENUM", "message": "charset no es uno de los valores admitidos." },
+      { "status": 400, "code": "INVALID_INTEGER", "message": "length debe estar entre 1 y 256." }
+    ],
+    "tags": ["aleatorio", "cadenas"]
+  },
+  {
+    "id": "random-choice",
+    "name": "Elección aleatoria de una lista",
+    "category": "aleatorio",
+    "type": "own",
+    "path": "/api/random/choice",
+    "methods": ["GET"],
+    "summary": "Elige uno o varios elementos al azar de la lista que envíes.",
+    "description": "Acepta la lista como valores separados por comas o por saltos de línea. Con unique=true hace un barajado parcial de Fisher-Yates con azar criptográfico, de modo que no se repite ningún elemento.",
+    "parameters": [
+      { "name": "items", "in": "query", "type": "string", "required": true, "example": "piedra,papel,tijera", "description": "Elementos separados por comas (o por | o saltos de línea)." },
+      { "name": "count", "in": "query", "type": "integer", "required": false, "example": "1", "default": "1", "description": "Cuántos elementos elegir (1 a 50)." },
+      { "name": "unique", "in": "query", "type": "boolean", "required": false, "example": "false", "default": "false", "description": "Con true no repite elementos." }
+    ],
+    "exampleRequest": "GET /api/random/choice?items=piedra,papel,tijera",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "items": ["piedra", "papel", "tijera"],
+          "itemCount": 3,
+          "count": 1,
+          "unique": false,
+          "choices": ["tijera"],
+          "choice": "tijera"
+        },
+        "meta": { "endpoint": "/api/random/choice", "method": "GET", "durationMs": 0, "timestamp": "2026-10-10T18:02:14.000Z", "requestId": "aa41c9f0" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.choices", "type": "array<string>", "description": "Elementos elegidos al azar." },
+      { "name": "data.choice", "type": "string", "description": "Atajo que aparece sólo cuando count=1." }
+    ],
+    "errors": [
+      { "status": 400, "code": "MISSING_PARAM", "message": "Falta el parámetro items." },
+      { "status": 400, "code": "TEXT_TOO_LONG", "message": "items supera el máximo de caracteres." },
+      { "status": 422, "code": "UNIQUE_IMPOSSIBLE", "message": "Pides más elementos únicos que elementos hay en la lista." }
+    ],
+    "tags": ["aleatorio", "listas"]
+  },
+  {
+    "id": "time",
+    "name": "Fecha y hora UTC",
+    "category": "tiempo",
+    "type": "own",
+    "path": "/api/time",
+    "methods": ["GET"],
+    "summary": "Hora actual del servidor en UTC con epoch, semana ISO y día del año.",
+    "description": "Se calcula con el reloj del sistema en el momento de la petición; no consulta ningún servicio externo. Incluye epoch en milisegundos y segundos, ideal para sincronizar relojes o medir desfases desde el navegador.",
+    "parameters": [],
+    "exampleRequest": "GET /api/time",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "utc": "2026-10-10T18:02:15.123Z",
+          "iso8601": "2026-10-10T18:02:15.123Z",
+          "epochMs": 1794831735123,
+          "epochSeconds": 1794831735,
+          "date": "2026-10-10",
+          "time": "18:02:15",
+          "timezone": "UTC",
+          "offset": "+00:00",
+          "dayOfWeek": "sábado",
+          "dayOfYear": 283,
+          "isoWeek": 41,
+          "isLeapYear": false,
+          "server": { "timezone": "UTC" }
+        },
+        "meta": { "endpoint": "/api/time", "method": "GET", "durationMs": 0, "timestamp": "2026-10-10T18:02:15.124Z", "requestId": "d9e0c114" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.utc", "type": "string", "description": "Fecha y hora UTC en formato ISO 8601 con milisegundos." },
+      { "name": "data.epochMs", "type": "number", "description": "Milisegundos desde 1970-01-01T00:00:00Z." },
+      { "name": "data.isoWeek", "type": "integer", "description": "Número de semana ISO 8601." }
+    ],
+    "errors": [],
+    "tags": ["tiempo", "utc"]
+  },
+  {
+    "id": "time-world",
+    "name": "Hora en cualquier zona horaria",
+    "category": "tiempo",
+    "type": "own",
+    "path": "/api/time/world",
+    "methods": ["GET"],
+    "summary": "Convierte la hora actual a la zona horaria IANA que indiques, con su desfase.",
+    "description": "Usa la base de datos de zonas horarias incluida en el propio Node.js (Intl), así que funciona sin conexión a Internet y respeta los cambios de horario de verano. Si la zona no existe, responde 400 con un ejemplo de formato válido.",
+    "parameters": [
+      { "name": "timezone", "in": "query", "type": "string", "required": false, "example": "America/Bogota", "default": "America/Bogota", "description": "Zona horaria IANA, por ejemplo Europe/Madrid o Asia/Tokyo." }
+    ],
+    "exampleRequest": "GET /api/time/world?timezone=Europe/Madrid",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "timezone": "Europe/Madrid",
+          "iso8601": "2026-10-10T20:02:16+02:00",
+          "localDate": "2026-10-10",
+          "localTime": "20:02:16",
+          "utc": "2026-10-10T18:02:16.500Z",
+          "offset": "+02:00",
+          "dayOfWeek": "sábado",
+          "abbreviation": "GMT+2",
+          "daylightSaving": true
+        },
+        "meta": { "endpoint": "/api/time/world", "method": "GET", "durationMs": 1, "timestamp": "2026-10-10T18:02:16.501Z", "requestId": "b2c3115e" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.iso8601", "type": "string", "description": "Hora local con su desfase respecto a UTC." },
+      { "name": "data.offset", "type": "string", "description": "Desfase aplicado, por ejemplo +02:00." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_TIMEZONE", "message": "La zona horaria no existe en la base IANA. Usa /api/time/timezones para ver las válidas." }
+    ],
+    "tags": ["tiempo", "zonas horarias"]
+  },
+  {
+    "id": "time-timezones",
+    "name": "Lista de zonas horarias IANA",
+    "category": "tiempo",
+    "type": "own",
+    "path": "/api/time/timezones",
+    "methods": ["GET"],
+    "summary": "Devuelve las zonas horarias válidas (más de 400) y permite buscar por texto.",
+    "description": "Se obtienen de Intl.supportedValuesOf('timeZone') del runtime, siempre actualizadas con la versión de Node.js instalada. Perfecto para rellenar un selector de zonas en tu aplicación.",
+    "parameters": [
+      { "name": "search", "in": "query", "type": "string", "required": false, "example": "bogota", "description": "Filtro de texto, sin distinguir mayúsculas ni acentos." },
+      { "name": "limit", "in": "query", "type": "integer", "required": false, "example": "50", "default": "400", "description": "Máximo de zonas a devolver (1 a 500)." }
+    ],
+    "exampleRequest": "GET /api/time/timezones?search=bogota",
+    "exampleResponse": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "total": 418,
+          "returned": 1,
+          "search": "bogota",
+          "limit": 400,
+          "timezones": ["America/Bogota"]
+        },
+        "meta": { "endpoint": "/api/time/timezones", "method": "GET", "durationMs": 2, "timestamp": "2026-10-10T18:02:17.000Z", "requestId": "ee17a3b4" }
+      }
+    },
+    "responseFields": [
+      { "name": "data.total", "type": "integer", "description": "Número total de zonas disponibles en el runtime." },
+      { "name": "data.timezones", "type": "array<string>", "description": "Zonas que coinciden con el filtro." }
+    ],
+    "errors": [
+      { "status": 400, "code": "INVALID_INTEGER", "message": "limit debe ser un entero entre 1 y 500." }
+    ],
+    "tags": ["tiempo", "listas"]
+  }
+]

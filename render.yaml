@@ -1,0 +1,20 @@
+# Blueprint de Render para FreeAPI Hub (plan gratuito, sin servicios de pago).
+# Uso: en Render, New → Blueprint → selecciona este repositorio.
+services:
+  - type: web
+    name: freeapi-hub
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render pone un proxy delante: es necesario para que el limitador de
+      # peticiones vea la IP real del cliente.
+      - key: TRUST_PROXY
+        value: "1"
+      - key: LOG_REQUESTS
+        value: "true"

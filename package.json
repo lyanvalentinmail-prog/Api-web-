@@ -1,0 +1,30 @@
+{
+  "name": "freeapi-hub",
+  "version": "1.0.0",
+  "description": "Plataforma gratuita de APIs públicas: catálogo, probador de endpoints, documentación y estado. Sin registro, sin login y sin API keys.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "check": "node --check server.js && node -e \"require('./src/app')\"",
+    "test:frontend": "node dev/frontend-check.mjs",
+    "start:env": "node --env-file=.env server.js"
+  },
+  "keywords": [
+    "api",
+    "public-api",
+    "free-api",
+    "express",
+    "json",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "sistema",
+    "name": "Sistema y metadatos",
+    "icon": "server",
+    "description": "Estado del servidor, información pública de la API y metadatos del catálogo."
+  },
+  {
+    "id": "aleatorio",
+    "name": "Datos aleatorios",
+    "icon": "dice",
+    "description": "Números, UUID, cadenas y colores generados con criptografía del sistema."
+  },
+  {
+    "id": "tiempo",
+    "name": "Fecha y hora",
+    "icon": "clock",
+    "description": "Hora UTC y hora local de cualquier zona horaria IANA, sin servicios externos."
+  },
+  {
+    "id": "texto",
+    "name": "Texto",
+    "icon": "type",
+    "description": "Transformaciones y estadísticas de texto: invertir, mayúsculas, slug y más."
+  },
+  {
+    "id": "json",
+    "name": "JSON",
+    "icon": "braces",
+    "description": "Validación y formateo de JSON con informes de error precisos."
+  },
+  {
+    "id": "mates",
+    "name": "Matemáticas",
+    "icon": "calculator",
+    "description": "Operaciones aritméticas y estadística básica sobre listas de números."
+  },
+  {
+    "id": "utilidades",
+    "name": "Utilidades para desarrolladores",
+    "icon": "wrench",
+    "description": "Base64, hash SHA-256, colores y eco de peticiones HTTP."
+  },
+  {
+    "id": "demo",
+    "name": "CRUD de ejemplo",
+    "icon": "database",
+    "description": "Recurso REST completo en memoria para practicar GET, POST, PUT, PATCH y DELETE."
+  },
+  {
+    "id": "externas",
+    "name": "APIs externas gratuitas",
+    "icon": "globe",
+    "description": "Proxies de solo lectura hacia APIs públicas de terceros que no piden clave. Su disponibilidad depende del proveedor."
+  }
+]
