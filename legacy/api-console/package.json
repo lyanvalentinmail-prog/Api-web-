@@ -1,0 +1,37 @@
+{
+  "name": "api-web-es",
+  "version": "3.0.0",
+  "description": "REST API pública en español, sin clave: IA, anime, descargas, juegos, tarjetas Canvas, generadores Brat/IQC y más, con Playground interactivo.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node scripts/smoke.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyanvalentinmail-prog/Api-web-.git"
+  },
+  "keywords": [
+    "rest-api",
+    "api-playground",
+    "brat-generator",
+    "iqc",
+    "express"
+  ],
+  "author": "Lyan Valentin",
+  "license": "MIT",
+  "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jpeg-js": "^0.4.4",
+    "qrcode": "^1.5.4",
+    "webp-wasm": "^1.0.6"
+  }
+}
