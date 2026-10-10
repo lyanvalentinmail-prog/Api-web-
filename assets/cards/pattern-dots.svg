@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <g fill="currentColor" opacity="0.16">
+    <circle cx="12" cy="12" r="2.2"/><circle cx="72" cy="12" r="2.2"/><circle cx="132" cy="12" r="2.2"/><circle cx="192" cy="12" r="2.2"/>
+    <circle cx="42" cy="42" r="2.2"/><circle cx="102" cy="42" r="2.2"/><circle cx="162" cy="42" r="2.2"/><circle cx="222" cy="42" r="2.2"/>
+    <circle cx="12" cy="72" r="2.2"/><circle cx="72" cy="72" r="2.2"/><circle cx="132" cy="72" r="2.2"/><circle cx="192" cy="72" r="2.2"/>
+    <circle cx="42" cy="102" r="2.2"/><circle cx="102" cy="102" r="2.2"/><circle cx="162" cy="102" r="2.2"/><circle cx="222" cy="102" r="2.2"/>
+    <circle cx="12" cy="132" r="2.2"/><circle cx="72" cy="132" r="2.2"/><circle cx="132" cy="132" r="2.2"/><circle cx="192" cy="132" r="2.2"/>
+    <circle cx="42" cy="162" r="2.2"/><circle cx="102" cy="162" r="2.2"/><circle cx="162" cy="162" r="2.2"/><circle cx="222" cy="162" r="2.2"/>
+    <circle cx="12" cy="192" r="2.2"/><circle cx="72" cy="192" r="2.2"/><circle cx="132" cy="192" r="2.2"/><circle cx="192" cy="192" r="2.2"/>
+    <circle cx="42" cy="222" r="2.2"/><circle cx="102" cy="222" r="2.2"/><circle cx="162" cy="222" r="2.2"/><circle cx="222" cy="222" r="2.2"/>
+  </g>
+</svg>
