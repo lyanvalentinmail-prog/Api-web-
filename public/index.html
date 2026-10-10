@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Console — REST API pública sin clave</title>
+  <meta name="description" content="API pública sin registro: generadores Brat e IQC, tarjetas Canvas y utilidades reales, ejecutables desde el navegador." />
+  <meta property="og:title" content="API Console" />
+  <meta property="og:description" content="REST API pública sin clave. Brat, IQC, tarjetas y utilidades, con Playground interactivo." />
+  <meta property="og:image" content="/assets/ui/og.jpg" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/assets/ui/favicon.svg" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="/" class="brand">
+        <img src="/assets/ui/logo.svg" alt="" />
+        <span>API Console</span>
+        <small>v3</small>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link active">Inicio</a>
+        <a href="/playground" class="nav-link">Playground</a>
+        <a href="/api/endpoints" class="nav-link">Catálogo JSON</a>
+        <a href="/playground" class="btn btn-primary btn-sm">Probar endpoints</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>API pública, sin clave.<br /><span class="accent">Pide, ejecuta y listo.</span></h1>
+      <p class="lede">
+        Un conjunto acotado de endpoints que hacen lo que prometen: generadores de imágenes
+        (Brat e iPhone&nbsp;Quoted&nbsp;Chat), tarjetas para bots y utilidades de desarrollo.
+        Sin registro, sin tokens, sin datos fingidos.
+      </p>
+      <div class="hero-actions">
+        <a href="/playground" class="btn btn-primary">Abrir Playground</a>
+        <a href="/api/endpoints" class="btn btn-outline">GET /api/endpoints</a>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat"><div class="num" id="stat-endpoints">—</div><div class="lbl">endpoints activos</div></div>
+        <div class="stat"><div class="num" id="stat-categories">—</div><div class="lbl">categorías</div></div>
+        <div class="stat"><div class="num" id="stat-requests">0</div><div class="lbl">peticiones servidas</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Generadores en vivo</h2>
+      <p class="section-sub">Cada imagen de abajo se renderiza ahora mismo con su endpoint: son <code>&lt;img&gt;</code> contra la API, no capturas.</p>
+      <div class="gallery">
+        <figure>
+          <div class="thumb"><img src="/api/maker/brat?text=brat%20summer&blur=3" alt="Portada brat" /></div>
+          <figcaption>/api/maker/brat?text=brat summer</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/maker/iqc?name=Lyan&text=Listo,%20el%20PR%20ya%20est%C3%A1%20mergeado%20%F0%9F%9A%80&replyTo=Mam%C3%A1&replyText=%C2%BFTerminaste%20el%20proyecto?&tapback=heart&scale=1" alt="Captura iMessage IQC" style="max-height:290px" /></div>
+          <figcaption>/api/maker/iqc</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/canvas/quote-card?quote=Hazlo%20simple,%20pero%20significativo.&author=An%C3%B3nimo&theme=light" alt="Tarjeta de cita" /></div>
+          <figcaption>/api/canvas/quote-card</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Canvas «Sakura Night»</h2>
+      <p class="section-sub">Seis plantillas nocturnas en blanco y negro renderizadas en JPG/PNG/SVG. Avatar, textos, números, color y tinte se cambian por query string, y en el <a href="/playground">Playground</a> la imagen se actualiza mientras escribes.</p>
+      <div class="gallery">
+        <figure>
+          <div class="thumb"><img src="/api/canvas/sakura/welcome?username=Lyan%20Valentin&avatar=marco&member=1&width=800" alt="Canvas Sakura welcome" loading="lazy" /></div>
+          <figcaption>/api/canvas/sakura/welcome?username=Lyan Valentin&amp;avatar=marco&amp;member=1</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/canvas/sakura/goodbye?username=Lyan%20Valentin&avatar=ana&width=800" alt="Canvas Sakura goodbye" loading="lazy" /></div>
+          <figcaption>/api/canvas/sakura/goodbye?username=Lyan Valentin&amp;avatar=ana</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/canvas/sakura/levelup?username=Lyan&avatar=cat&level=2&width=800" alt="Canvas Sakura level up" loading="lazy" /></div>
+          <figcaption>/api/canvas/sakura/levelup?username=Lyan&amp;avatar=cat&amp;level=2</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/canvas/sakura/levelup-v2?username=Lyan&level=2&tint=%23ffb7c5&color=%23ffe4ec&width=800" alt="Canvas Sakura level up v2" loading="lazy" /></div>
+          <figcaption>/api/canvas/sakura/levelup-v2?username=Lyan&amp;level=2&amp;tint=#ffb7c5&amp;color=#ffe4ec</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/canvas/sakura/ship?name1=Tu%20perfil&name2=Su%20perfil&avatar1=ana&avatar2=marco&width=800" alt="Canvas Sakura ship" loading="lazy" /></div>
+          <figcaption>/api/canvas/sakura/ship?name1=Tu perfil&amp;name2=Su perfil&amp;avatar1=ana&amp;avatar2=marco</figcaption>
+        </figure>
+        <figure>
+          <div class="thumb"><img src="/api/canvas/sakura/gay?username=Lyan&avatar=marco&width=600" alt="Canvas Sakura gay" loading="lazy" /></div>
+          <figcaption>/api/canvas/sakura/gay?username=Lyan&amp;avatar=marco</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Categorías</h2>
+      <p class="section-sub">Catálogo real, auto-descubierto al arrancar el servidor desde <code>src/routes/</code>.</p>
+      <div class="cat-grid" id="cat-grid">
+        <p class="section-sub">Cargando catálogo…</p>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Uso en 30 segundos</h2>
+      <p class="section-sub">Cualquier endpoint se consume directo con <code>fetch</code>, <code>cURL</code> o una etiqueta <code>&lt;img&gt;</code>.</p>
+      <pre class="code-block"><span class="c"># cURL</span>
+curl "https://TU-DOMINIO/api/maker/brat?text=hola%20mundo"
+
+<span class="c"># JavaScript</span>
+const img = document.createElement('img');
+img.src = '/api/maker/iqc?text=Hola%20desde%20un%20bot&avatar=ana';
+document.body.appendChild(img);
+
+<span class="c"># JSON</span>
+const data = await fetch('/api/tools/hash?text=secreto&algorithm=sha256').then(r => r.json());</pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div><strong>API Console</strong> — Node.js + Express · imágenes y assets en <code>/assets</code></div>
+      <div><a href="/playground">Playground</a> · <a href="/api/stats">Status</a></div>
+    </div>
+  </footer>
+
+  <script src="/js/landing.js"></script>
+</body>
+</html>
